@@ -4,7 +4,7 @@ Originated from the indie game "Exp10sion"
 <u>https://store.steampowered.com/app/2618850/Exp10sion/</u>
 
 简体中文文档（施工中）：
-<u>[点击这里](https://github.com/cortexA233/KToolkit/blob/main/README_CN.md)</u>
+<u>[点击这里](https://github.com/cortexA233/KToolkit_for_unity/blob/main/README_CN.md)</u>
 
 # Event System
 ## Main Files
