@@ -29,7 +29,7 @@ namespace KToolkit
             
             // todo 这里应该改成把cell和base区分开的
             // var newCell = new T();
-            Transform transformParent = parent is null ? transform : parent;
+            Transform transformParent = parent ?? transform;
             newCell.gameObject =
                 GameObject.Instantiate(Resources.Load<GameObject>(KUIManager.KUI_CELL_INFO_MAP[typeof(T)].prefabPath),
                     transformParent);

@@ -3,21 +3,70 @@
 起源于独立游戏《Exp10sion》  
 <u>https://store.steampowered.com/app/2618850/Exp10sion/</u>
 
+# 启动方法
+* 将KToolkit框架的所有代码放到Assets目录下；
+* 在游戏初始化时调用一次KFrameworkManager.instance.InitKFramework();用以启动框架代码，即完成启动流程；
+
 # 事件系统
 
 ## 主要文件
 * KEventSystem.cs：全局管理事件系统的静态类，主要对外接口是SendNotification系列接口，用来发送事件通知。支持可变参数。
-* KEventEnum.cs：事件枚举，主要用来新增事件名称，后续可能会扩展事件类型等。
-* KObserver.cs：观察者基类，可选是否继承自MonoBehavior。   
+* KEventName.cs：事件枚举，主要用来新增事件名称，后续可能会扩展事件类型等。
+* KObserver.cs：观察者基类，可选是否继承自MonoBehavior（KObserver类和KObserverNoMono类）。   
 
 
 ## 用法
 * 如果一个类想要作为观察者，接入事件系统，则需要继承自KObserver（或者KObserverNoMono，如果不想继承自MonoBehavior的话）。
 * 使用KObserver.AddEventListener()接口来注册对单个事件的监听，两个参数为：事件名称；对于该事件，这个观察者收到对应事件通知后调用的回调函数（对同一个事件不可以重复注册，重复注册同一事件以最后一次注册的结果为准，前面传入的回调都会被覆盖掉）。
-* 使用EventSystem.SendNotification()接口来发送事件通知，SendNotification()接口会遍历所有观察者，删除其中已经失效的观察者，并调用每个有效的观察者对应事件回调。
+* 使用KEventManager.SendNotification()接口来发送事件通知，SendNotification()接口会遍历所有观察者，删除其中已经失效的观察者，并调用每个有效的观察者对应事件回调。
 
-## TODO：实例
-* 施工中......
+## 实例
+* 以下是一个使用KObserverNoMono类和一个普通MonoBehavior脚本实现的观察者模式实例；
+* 把TestMono脚本挂到场景里，然后按下K键，即可打印出三行对于的内容（见下述代码）。
+```csharp
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using KToolkit;
+
+
+// 事件的发送者，做一个最简单的脚本组件
+public class TestMono : MonoBehavior
+{
+    // 声明并缓存一个观察者（即事件的监听者）
+    TestObserverNoMono observer = new TestObserverNoMono();
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            int arg2 = 2;
+            int arg3 = 3;
+            KEventManager.SendNotification(KEventName.TestEventName_1, "arg1", arg2, arg3);
+        }
+    }
+}
+
+
+// 事件的接收者，继承自KObserver或KObserverNoMono即可
+public class TestObserverNoMono : KObserverNoMono
+{
+    // 在构造函数，或MonoBehavior的Awake，Start函数等适合作逻辑初始化逻辑的位置监听事件
+    TestObserverNoMono()
+    {
+        AddEventListener(KEventName.TestEventName_1, args =>
+        {
+            Debug.Log("TestEventName_1 Triggered!!");   // 打印字符串：TestEventName_1 Triggered!!
+            Debug.Log((string)arg1);    // 打印字符串：arg1
+            Debug.Log((int)arg2 + (int)arg3);   // 打印整数：5
+        });
+    }
+}
+
+```
+
 
 # UI框架
 
@@ -33,11 +82,84 @@
 * 在PageEnum.cs中按照示例的格式注册新页面类型，或使用KUI_Info进行注册
 * 在需要创建页面时，调用KUIManager.CreateUI<xxxPage>(xxx参数)；在需要销毁页面时，调用KUIManager.DestroyUI<xxxPage>()即可
 * KUIBasePage的onStart，onDestroy和InitParams函数为虚函数，应根据需要做重载。其中InitParam用于接收UI传入的数据，onStart，onDestroy分别会在UI被创建和销毁时调用
+* 可以在任意KUIBase的子类中使用CreateUICell函数来创建KUICell，在该KUIBase销毁时，其上的所有KUICell也会跟着销毁。
 
 
-## TODO：实例
-* 施工中......
+## 实例
+* 以下是一个基于KUIBase的自定义页面例子，这个页面除了自带的按钮外，也含有使用KUICell动态创建的按钮。
+```csharp
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using KToolkit;
 
+
+// 通过KUI_Info的Attribute进行UI的注册
+[KUI_Info("start_page", "StartMenuPage")]
+// 定义一个自定义页面类StartMenuPage
+public class StartMenuPage : KUIBase
+{
+    Button newGameButton;
+    Button quitButton;
+    Button tutorialButton;
+
+    // 页面初始化函数
+    public override void InitParams(params object[] args)
+    {
+        base.InitParams(args);
+        
+        // 监听外部事件，游戏开始时关闭这个菜单
+        AddEventListener(KEventName.GameStartComplete, args =>
+        {
+            DestroySelf();
+        });
+        
+        // 找到按钮并绑定事件
+        newGameButton = transform.Find("root/new_game_button").GetComponent<Button>();
+        quitButton = transform.Find("root/quit_button").GetComponent<Button>();
+        tutorialButton = transform.Find("root/tutorial_button").GetComponent<Button>();
+
+        newGameButton.onClick.AddListener(EnterNewGameRoleSelectState);
+        quitButton.onClick.AddListener(QuitGame);
+        tutorialButton.onClick.AddListener(Tutorial);
+        
+        // 在prefab里的root节点下创建五个按钮Cell
+        for (int i = 0; i < 5; ++i)
+        {
+            cellList.Add(CreateUICell<MenuButtonCell>(transform.Find("root")));
+        }
+    }
+
+    void EnterNewGameRoleSelectState()
+    {
+        KUIManager.instance.CreateUI<RoleSelectPage>();
+    }
+
+    void Tutorial()
+    {
+        KUIManager.instance.CreateUI<TutorialPage>();
+    }
+
+    void QuitGame()
+    {
+        Application.Quit();
+    }
+}
+
+
+// 示例用按钮Cell，无功能，可自行定义
+[KUI_Cell_Info("UI_prefabs/Cell/menu_button", "MenuButtonCell")]
+public class MenuButtonCell : KUICell
+{
+    public override void OnCreate(params object[] args)
+    {
+        // 初始化按钮，如绑定按钮功能监听等
+    }
+}
+
+```
 
 ## 备注
 * KUIBasePage继承自KObserverNoMono类。事实上，如非特别说明，所有的类都应该继承自KObserver或KObserverNoMono类
