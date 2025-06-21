@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -288,3 +289,4 @@ public static class StateMachineAnalyzer
         return relationships;
     }
 }
+#endif
