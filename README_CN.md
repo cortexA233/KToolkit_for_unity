@@ -17,6 +17,7 @@
 
 ## 用法
 * 如果一个类想要作为观察者，接入事件系统，则需要继承自KObserver（或者KObserverNoMono，如果不想继承自MonoBehavior的话）。
+* 在KEventName枚举中定义需要的事件名称。
 * 使用KObserver.AddEventListener()接口来注册对单个事件的监听，两个参数为：事件名称；对于该事件，这个观察者收到对应事件通知后调用的回调函数（对同一个事件不可以重复注册，重复注册同一事件以最后一次注册的结果为准，前面传入的回调都会被覆盖掉）。
 * 使用KEventManager.SendNotification()接口来发送事件通知，SendNotification()接口会遍历所有观察者，删除其中已经失效的观察者，并调用每个有效的观察者对应事件回调。
 
@@ -44,6 +45,7 @@ public class TestMono : MonoBehavior
         {
             int arg2 = 2;
             int arg3 = 3;
+            // 
             KEventManager.SendNotification(KEventName.TestEventName_1, "arg1", arg2, arg3);
         }
     }
@@ -59,8 +61,8 @@ public class TestObserverNoMono : KObserverNoMono
         AddEventListener(KEventName.TestEventName_1, args =>
         {
             Debug.Log("TestEventName_1 Triggered!!");   // 打印字符串：TestEventName_1 Triggered!!
-            Debug.Log((string)arg1);    // 打印字符串：arg1
-            Debug.Log((int)arg2 + (int)arg3);   // 打印整数：5
+            Debug.Log((string)args[0]);    // 打印字符串：arg1
+            Debug.Log((int)args[1] + (int)args[2]);   // 打印整数：5
         });
     }
 }
@@ -79,7 +81,8 @@ public class TestObserverNoMono : KObserverNoMono
 
 ## 用法
 * 如上，当你需要新建一个UI页面时，首先新建一个自己的页面类，并继承KUIBase
-* 在PageEnum.cs中按照示例的格式注册新页面类型，或使用KUI_Info进行注册
+* 在Resources/UI_prefabs目录里新建好UI的prefab
+* 使用KUI_Info对UI进行注册，填入UI名和UI prefab相对于Resources/UI_prefabs的相对路径
 * 在需要创建页面时，调用KUIManager.CreateUI<xxxPage>(xxx参数)；在需要销毁页面时，调用KUIManager.DestroyUI<xxxPage>()即可
 * KUIBasePage的onStart，onDestroy和InitParams函数为虚函数，应根据需要做重载。其中InitParam用于接收UI传入的数据，onStart，onDestroy分别会在UI被创建和销毁时调用
 * 可以在任意KUIBase的子类中使用CreateUICell函数来创建KUICell，在该KUIBase销毁时，其上的所有KUICell也会跟着销毁。
@@ -96,7 +99,7 @@ using UnityEngine.UI;
 using KToolkit;
 
 
-// 通过KUI_Info的Attribute进行UI的注册
+// 通过KUI_Info的Attribute进行UI的注册，第一个参数是prefab相对于Resources/UI_prefabs的相对路径，第二个参数是UI名字（任意取，可以和类名一致）
 [KUI_Info("start_page", "StartMenuPage")]
 // 定义一个自定义页面类StartMenuPage
 public class StartMenuPage : KUIBase
