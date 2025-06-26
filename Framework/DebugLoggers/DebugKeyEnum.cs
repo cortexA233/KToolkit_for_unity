@@ -15,7 +15,18 @@ namespace KToolkit
             debuggerConfig["UI"] = true;
         }
         
-        private static partial void InitDebuggerConfig();
+        private static void InitDebuggerConfig()
+        {
+            debuggerConfig["UI"] = true;
+            debuggerConfig["Battle"] = true;
+            debuggerConfig["System"] = true;
+            debuggerConfig["Player"] = true;
+            debuggerConfig["Level"] = true;
+        
+            debuggerConfig["Cortex"] = true;
+            debuggerConfig["Veyo"] = false;
+            debuggerConfig["Shin"] = true;
+        }
 
         private static string DebuggerConcatArgs(params object[] args)
         {

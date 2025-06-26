@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System;
 using System.Linq;
+using KToolkit;
 
 public class GenericStateMachineVisualizer : EditorWindow
 {
@@ -155,7 +156,7 @@ public class GenericStateMachineVisualizer : EditorWindow
         {
             // Find all BaseFSM fields and properties
             List<BaseFSM> stateMachines = FindStateMachinesInComponent(targetComponent);
-            
+            KDebugLogger.Cortex_DebugLog(stateMachines.Count, targetComponent.GetType());
             if (stateMachines.Count > 0)
             {
                 EditorGUILayout.Space();
@@ -257,9 +258,11 @@ public class GenericStateMachineVisualizer : EditorWindow
         FieldInfo[] fields = componentType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         foreach (var field in fields)
         {
+            KDebugLogger.Cortex_DebugLog(field.FieldType, typeof(BaseFSM).IsAssignableFrom(field.FieldType));
             if (typeof(BaseFSM).IsAssignableFrom(field.FieldType))
             {
                 BaseFSM sm = field.GetValue(component) as BaseFSM;
+                KDebugLogger.Cortex_DebugLog(sm);
                 if (sm != null)
                 {
                     stateMachines.Add(sm);
