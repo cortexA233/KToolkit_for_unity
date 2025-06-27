@@ -20,7 +20,8 @@ namespace KToolkit
                 if (_instance == null)
                 {
                     // 查找现有的 GameManager 实例
-                    _instance = FindObjectOfType<T>();
+                    // _instance = FindObjectOfType<T>();
+                    _instance = FindAnyObjectByType<T>();
 
                     // 如果没有找到，则创建一个新的
                     if (_instance == null)
