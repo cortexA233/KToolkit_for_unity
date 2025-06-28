@@ -12,16 +12,16 @@ namespace KToolkit
     {
         // private double currentTime = 0f;
 
-        private List<Tuple<float, UnityAction<object[]>, object[]>> delayTimerList =
-            new List<Tuple<float, UnityAction<object[]>, object[]>>();
+        private List<DelayFuncInfo> delayTimerList = new List<DelayFuncInfo>();
 
         public void Update()
         {
             for (int i = delayTimerList.Count - 1; i >= 0; i--)
             {
-                if (delayTimerList[i].Item1 <= 0)
+                delayTimerList[i].delayTime -= Time.deltaTime;
+                if (delayTimerList[i].delayTime <= 0)
                 {
-                    delayTimerList[i].Item2(delayTimerList[i].Item3);
+                    delayTimerList[i].func(delayTimerList[i].args);
                     delayTimerList.RemoveAt(i);
                 }
             }
@@ -29,7 +29,18 @@ namespace KToolkit
 
         public void AddDelayTimerFunc(float delayTime, UnityAction<object[]> func, params object[] args)
         {
-            delayTimerList.Add(new Tuple<float, UnityAction<object[]>, object[]>(delayTime, func, args));
+            DelayFuncInfo newInfo = new DelayFuncInfo();
+            newInfo.delayTime = delayTime;
+            newInfo.func = func;
+            newInfo.args = args;
+            delayTimerList.Add(newInfo);
         }
+    }
+
+    class DelayFuncInfo
+    {
+        public float delayTime;
+        public UnityAction<object[]> func;
+        public object[] args;
     }
 }
