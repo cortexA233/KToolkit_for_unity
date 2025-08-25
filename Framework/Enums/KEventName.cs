@@ -20,6 +20,8 @@ public enum KEventName
     
     RoleSelectComplete,               // 角色选择完成，参数1:PlayerSnakeType（选择的玩家角色类型）
     WeaponSelectComplete,              // 武器选择完成，参数1:PlayerWeaponType（选择的武器类型）
+
+    BlackHoleExpand,
     
     // UI，交互相关事件
     StartJumpText,               // 通知进行一次跳字，参数1:string（跳字内容）
