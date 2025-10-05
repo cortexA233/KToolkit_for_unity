@@ -34,29 +34,34 @@ public abstract class BaseFSM : KObserverNoMono
 
 public abstract class KBaseState<TOwner> where TOwner : MonoBehaviour
 {
-    public TOwner owner;
-    public KBaseState(TOwner owner)
-    {
-        this.owner = owner;
-    }
-    public abstract void EnterState();
-    public abstract void HandleFixedUpdate();
-    public abstract void HandleUpdate();
-    public abstract void ExitState();
-    public abstract void HandleCollide2D(Collision2D collision);
-    public abstract void HandleTrigger2D(Collider2D collider);
+    public abstract void EnterState(TOwner owner, params object[] args);
+    public abstract void HandleFixedUpdate(TOwner owner);
+    public abstract void HandleUpdate(TOwner owner);
+    public abstract void ExitState(TOwner owner);
+    public abstract void HandleCollide2D(TOwner owner, Collision2D collision);
+    public abstract void HandleTrigger2D(TOwner owner, Collider2D collider);
 }
 
 
-public abstract class KBaseFSM<TOwner> : KObserverNoMono where TOwner : MonoBehaviour
+public class KStateMachine<TOwner> : KObserverNoMono where TOwner : MonoBehaviour
 {
     public TOwner owner { protected set; get; }
     public KBaseState<TOwner> currentState { protected set; get; }
-    public void TransitState(KBaseState<TOwner> newState)
+
+    public KStateMachine(TOwner owner, KBaseState<TOwner> initialState, params object[] args)
     {
-        currentState.ExitState();
-        currentState = null;
+        this.owner = owner;
+        TransitState(initialState, args);
+    }
+    public void TransitState(KBaseState<TOwner> newState, params object[] args)
+    {
+        if (currentState != null) 
+        {
+            currentState.ExitState(owner);
+            currentState = null;
+        }
         currentState = newState;
+        newState.EnterState(owner, args);
     }
 }
 
