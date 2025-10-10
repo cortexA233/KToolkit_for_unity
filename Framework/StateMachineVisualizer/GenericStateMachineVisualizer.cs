@@ -6,7 +6,7 @@ using System.Reflection;
 using System;
 using System.Linq;
 using KToolkit;
-
+/*
 public class GenericStateMachineVisualizer : EditorWindow
 {
     private MonoBehaviour targetComponent;
@@ -249,7 +249,7 @@ public class GenericStateMachineVisualizer : EditorWindow
         GUILayout.EndScrollView();
     }
     
-    private List<BaseFSM> FindStateMachinesInComponent(MonoBehaviour component)
+    private List<KStateMachine> FindStateMachinesInComponent(MonoBehaviour component)
     {
         List<BaseFSM> stateMachines = new List<BaseFSM>();
         Type componentType = component.GetType();
@@ -797,4 +797,5 @@ public class GenericStateMachineVisualizer : EditorWindow
         }
     }
 }
+*/
 #endif

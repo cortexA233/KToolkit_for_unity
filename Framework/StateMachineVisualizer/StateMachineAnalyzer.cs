@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
+/*
 /// <summary>
 /// Helper class to analyze state machine transitions
 /// </summary>
@@ -289,4 +290,5 @@ public static class StateMachineAnalyzer
         return relationships;
     }
 }
+*/
 #endif
