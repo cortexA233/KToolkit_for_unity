@@ -42,27 +42,38 @@ namespace KToolkit
         public void HandleCollide2D(TOwner owner, Collision2D collision);
         public void HandleTrigger2D(TOwner owner, Collider2D collider);
     }
-
-
+    
     public class KStateMachine<TOwner> : KObserverNoMono where TOwner : MonoBehaviour
     {
-        public TOwner owner { protected set; get; }
-        public KIBaseState<TOwner> currentState { protected set; get; }
+        public TOwner owner { private set; get; }
+        public KIBaseState<TOwner> currentState { private set; get; }
 
         public KStateMachine(TOwner owner, KIBaseState<TOwner> initialState, params object[] args)
         {
             this.owner = owner;
-            TransitState(initialState, args);
+            currentState = initialState;
+            currentState.EnterState(owner, args);
         }
-        public void TransitState(KIBaseState<TOwner> newState, params object[] args)
+
+        // public void TransitState(KIBaseState<TOwner> newState, params object[] args)
+        // {
+        //     if (currentState != null) 
+        //     {
+        //         currentState.ExitState(owner);
+        //         currentState = null;
+        //     }
+        //     currentState = newState;
+        //     newState.EnterState(owner, args);
+        // }
+        public void TransitState<TState>(params object[] args) where TState : KIBaseState<TOwner>, new()
         {
             if (currentState != null) 
             {
                 currentState.ExitState(owner);
                 currentState = null;
             }
-            currentState = newState;
-            newState.EnterState(owner, args);
+            currentState = new TState();
+            currentState.EnterState(owner, args);
         }
     } 
 }

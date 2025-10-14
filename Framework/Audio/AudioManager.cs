@@ -61,13 +61,23 @@ public class AudioManager : KSingletonNoMono<AudioManager>
         musicSource.Stop();
     }
 
-    public void StopBGMFadeOut()
+    public void StopBGMFadeOut(float fadeTime=2f)
     {
         if(musicSource.isPlaying == false)
         {
             return;
         }
-        musicSource.DOFade(0, 2f);
+        AudioFadeCoroutine(musicSource, 0f, fadeTime);
+    }
+    
+    private IEnumerator AudioFadeCoroutine(AudioSource source, float targetVolume, float fadeOutTime)
+    {
+        float fadeSpeed = (source.volume - targetVolume) / fadeOutTime;
+        while (source.volume > targetVolume)
+        {
+            source.volume -= fadeSpeed * Time.deltaTime;
+            yield return null;
+        }
     }
 
     public void PauseBGM()
