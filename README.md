@@ -7,7 +7,7 @@ Originated from the indie game "Exp10sion"
 <u>[点击这里](https://github.com/cortexA233/KToolkit_for_unity/blob/main/README_CN.md)</u>
 
 # How to Get Started
-* Just simply download the unity package file in release, and import it to your unity project.
+* Just simply download the unity package file: **KToolkit_release_0.1.unitypackage** in the root directory (well, I'll have a release version soon), and import it to your unity project.
 * If you want to use KToolkit, you need to call KFrameworkManager.Init() before you call other functions.
 * You need to initialize and enter your game in Entrance.unity scene.
 
@@ -59,9 +59,9 @@ public class TestObserverNoMono : KObserverNoMono
     {
         AddEventListener(KEventName.TestEventName_1, args =>
         {
-            Debug.Log("TestEventName_1 Triggered!!");   // 打印字符串：TestEventName_1 Triggered!!
-            Debug.Log((string)args[0]);    // 打印字符串：arg1
-            Debug.Log((int)args[1] + (int)args[2]);   // 打印整数：5
+            Debug.Log("TestEventName_1 Triggered!!");   // will print：TestEventName_1 Triggered!!
+            Debug.Log((string)args[0]);    // will print：arg1
+            Debug.Log((int)args[1] + (int)args[2]);   // will print：5
         });
     }
 }
