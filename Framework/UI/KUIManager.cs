@@ -20,7 +20,7 @@ namespace KToolkit
         private static int singletonNum = 0;
         public KUIManager()
         {
-            // UnityEngine.Object.DontDestroyOnLoad(GameObject.Find("Canvas"));
+            Object.DontDestroyOnLoad(GameObject.Find("KCanvas"));
             ++singletonNum;
             if (singletonNum > 1)
             {
@@ -35,7 +35,7 @@ namespace KToolkit
         {
             var newUI = new T();
             newUI.gameObject = GameObject.Instantiate(Resources.Load<GameObject>(UI_INFO_MAP[typeof(T)].prefabPath),
-                GameObject.Find("Canvas").transform);
+                GameObject.Find("KCanvas").transform);
             newUI.transform = newUI.gameObject.transform;
             newUI.InitParams(args);
             uiList.Add(newUI);
@@ -174,7 +174,7 @@ namespace KToolkit
 
         public Canvas GetCanvas()
         {
-            return GameObject.Find("Canvas").GetComponent<Canvas>();
+            return GameObject.Find("KCanvas").GetComponent<Canvas>();
         }
 
         public void Update()
