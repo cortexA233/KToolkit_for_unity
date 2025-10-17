@@ -28,7 +28,11 @@ public class KIStateMachineVisualizer : EditorWindow
     private Vector2 _scrollPos;
     private string _highlightedState = null;
 
-    [MenuItem("Tools/KI State Machine Visualizer")]
+    // 记录哪些宿主类型与类处于展开状态
+    private Dictionary<string, bool> _ownerFoldouts = new();
+    private Dictionary<string, bool> _classFoldouts = new();
+
+    [MenuItem("KToolkit/State Machine Visualizer")]
     public static void ShowWindow()
     {
         GetWindow<KIStateMachineVisualizer>("KI State Visualizer");
@@ -48,63 +52,99 @@ public class KIStateMachineVisualizer : EditorWindow
         }
 
         _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
+
         foreach (var ownerGroup in _stateByOwner)
         {
-            EditorGUILayout.LabelField($"[Owner Type] {ownerGroup.Key}", EditorStyles.boldLabel);
+            // 一级：宿主类型
+            if (!_ownerFoldouts.ContainsKey(ownerGroup.Key))
+                _ownerFoldouts[ownerGroup.Key] = true;
 
-            foreach (var state in ownerGroup.Value)
+            _ownerFoldouts[ownerGroup.Key] = EditorGUILayout.Foldout(_ownerFoldouts[ownerGroup.Key], $"[Owner Type] {ownerGroup.Key}", true, EditorStyles.foldoutHeader);
+
+            if (_ownerFoldouts[ownerGroup.Key])
             {
-                DrawStateEntry(state);
+                foreach (var state in ownerGroup.Value)
+                {
+                    DrawStateEntry(state);
+                }
             }
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space(5);
+            GUILayout.Space(20);
         }
+
         EditorGUILayout.EndScrollView();
     }
 
     private void DrawStateEntry(StateClassInfo state)
     {
-        GUIStyle stateStyle = new(EditorStyles.label);
+        if (!_classFoldouts.ContainsKey(state.ClassName))
+            _classFoldouts[state.ClassName] = false;
+
+        GUIStyle foldoutStyle = new(EditorStyles.foldout);
+        foldoutStyle.normal.textColor = Color.cyan;
+        foldoutStyle.active.textColor = Color.cyan;
+        foldoutStyle.focused.textColor = Color.cyan;
+        foldoutStyle.hover.textColor = Color.cyan;
+        
         if (state.ClassName == _highlightedState)
         {
-            stateStyle.normal.textColor = Color.cyan;
-            stateStyle.fontStyle = FontStyle.Bold;
+            foldoutStyle.fontStyle = FontStyle.Bold;
         }
 
-        // 点击状态名：打开对应脚本文件
-        if (GUILayout.Button($"  • {state.ClassName}", stateStyle))
-        {
-            _highlightedState = state.ClassName;
-            OpenScriptAtLine(state.FilePath, 1);
-        }
+        EditorGUILayout.BeginVertical("box");
+        _classFoldouts[state.ClassName] = EditorGUILayout.Foldout(
+            _classFoldouts[state.ClassName],
+            state.ClassName,
+            true,
+            foldoutStyle
+        );
 
-        if (state.Transitions.Count == 0)
+        if (_classFoldouts[state.ClassName])
         {
-            EditorGUILayout.LabelField("      (No transitions)", EditorStyles.miniLabel);
-            return;
-        }
-
-        foreach (var trans in state.Transitions)
-        {
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Space(30);
-            EditorGUILayout.LabelField("→", GUILayout.Width(20));
-
-            GUIStyle targetStyle = new(EditorStyles.label);
-            if (trans.TargetState == _highlightedState)
+            if (GUILayout.Button("📄 Open Script", EditorStyles.miniButton))
             {
-                targetStyle.normal.textColor = Color.green;
-                targetStyle.fontStyle = FontStyle.Bold;
+                _highlightedState = state.ClassName;
+                OpenScriptAtLine(state.FilePath, 1);
             }
 
-            if (GUILayout.Button(trans.TargetState, targetStyle))
+            if (state.Transitions.Count == 0)
             {
-                _highlightedState = trans.TargetState;
-                OpenScriptAtLine(trans.SourceFile, trans.LineNumber);
+                EditorGUILayout.LabelField("    (No transitions)", EditorStyles.miniLabel);
             }
+            else
+            {
+                foreach (var trans in state.Transitions)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Space(20);
+                    EditorGUILayout.LabelField("→", GUILayout.Width(15));
 
-            EditorGUILayout.EndHorizontal();
+                    GUIStyle targetStyle = new(EditorStyles.label)
+                    {
+                        normal = { textColor = (trans.TargetState == _highlightedState) ? Color.green : Color.white }
+                    };
+
+                    if (GUILayout.Button(trans.TargetState, targetStyle))
+                    {
+                        _highlightedState = trans.TargetState;
+                        OpenScriptAtLine(trans.SourceFile, trans.LineNumber);
+                    }
+
+                    GUILayout.Space(10);
+
+                    // 显示行号并可点击跳转
+                    if (GUILayout.Button($"(line {trans.LineNumber})", EditorStyles.miniLabel, GUILayout.Width(80)))
+                    {
+                        OpenScriptAtLine(trans.SourceFile, trans.LineNumber);
+                    }
+
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
         }
+
+        EditorGUILayout.EndVertical();
     }
 
     private void RefreshStateInfo()
@@ -117,7 +157,6 @@ public class KIStateMachineVisualizer : EditorWindow
 
         foreach (var file in files)
         {
-            Debug.Log(file);
             string[] lines = File.ReadAllLines(file);
             for (int i = 0; i < lines.Length; i++)
             {
