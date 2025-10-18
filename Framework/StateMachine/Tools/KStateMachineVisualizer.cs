@@ -6,6 +6,10 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
+
+// todo 两个问题：
+// 1. 搜索想要搜到Transition，目前只能搜State和Owner
+// 2. 除了状态类内的Transition，其他的Transition也要标出来
 namespace KToolkit
 {
     public class KStateMachineVisualizer : EditorWindow
