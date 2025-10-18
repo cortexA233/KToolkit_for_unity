@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
-
 namespace KToolkit
 {
     public class KStateMachineVisualizer : EditorWindow
@@ -29,7 +28,7 @@ namespace KToolkit
         private Vector2 _scrollPos;
         private string _highlightedState = null;
 
-        // 记录哪些宿主类型与类处于展开状态
+        // 折叠状态
         private Dictionary<string, bool> _ownerFoldouts = new();
         private Dictionary<string, bool> _classFoldouts = new();
 
@@ -56,21 +55,34 @@ namespace KToolkit
 
             foreach (var ownerGroup in _stateByOwner)
             {
-                // 一级：宿主类型
+                // 一级：宿主类型折叠
                 if (!_ownerFoldouts.ContainsKey(ownerGroup.Key))
-                    _ownerFoldouts[ownerGroup.Key] = true;
-                // GUIStyle style = GUIStyle.
-                _ownerFoldouts[ownerGroup.Key] = EditorGUILayout.Foldout(_ownerFoldouts[ownerGroup.Key], $"[Owner Type] {ownerGroup.Key}", true, EditorStyles.foldoutHeader);
+                    _ownerFoldouts[ownerGroup.Key] = EditorPrefs.GetBool(GetOwnerKey(ownerGroup.Key), true);
+
+                bool newOwnerState = EditorGUILayout.Foldout(
+                    _ownerFoldouts[ownerGroup.Key],
+                    $"[Owner Type] {ownerGroup.Key}",
+                    true,
+                    EditorStyles.foldoutHeader
+                );
+
+                if (newOwnerState != _ownerFoldouts[ownerGroup.Key])
+                {
+                    _ownerFoldouts[ownerGroup.Key] = newOwnerState;
+                    EditorPrefs.SetBool(GetOwnerKey(ownerGroup.Key), newOwnerState);
+                }
 
                 if (_ownerFoldouts[ownerGroup.Key])
                 {
+                    GUILayout.Space(5);
+                    EditorGUI.indentLevel++;
                     foreach (var state in ownerGroup.Value)
                     {
                         DrawStateEntry(state);
                     }
+                    EditorGUI.indentLevel--;
                 }
 
-                EditorGUILayout.Space(5);
                 GUILayout.Space(20);
             }
 
@@ -80,33 +92,34 @@ namespace KToolkit
         private void DrawStateEntry(StateClassInfo state)
         {
             if (!_classFoldouts.ContainsKey(state.ClassName))
-                _classFoldouts[state.ClassName] = false;
+                _classFoldouts[state.ClassName] = EditorPrefs.GetBool(GetClassKey(state.ClassName), false);
 
-            GUIStyle foldoutStyle = EditorStyles.foldout;
+            GUIStyle foldoutStyle = new(EditorStyles.foldout);
             foldoutStyle.normal.textColor = Color.cyan;
-            foldoutStyle.active.textColor = Color.cyan;
-            foldoutStyle.focused.textColor = Color.cyan;
-            foldoutStyle.hover.textColor = Color.cyan;
             foldoutStyle.onNormal.textColor = Color.cyan;
-            foldoutStyle.onActive.textColor = Color.cyan;
-            foldoutStyle.onFocused.textColor = Color.cyan;
+            foldoutStyle.hover.textColor = Color.cyan;
             foldoutStyle.onHover.textColor = Color.cyan;
-            
-            if (state.ClassName == _highlightedState)
-            {
-                foldoutStyle.fontStyle = FontStyle.Bold;
-            }
+            foldoutStyle.fontStyle = state.ClassName == _highlightedState ? FontStyle.Bold : FontStyle.Normal;
 
             EditorGUILayout.BeginVertical("box");
-            _classFoldouts[state.ClassName] = EditorGUILayout.Foldout(
+            EditorGUI.indentLevel++;
+
+            bool newFoldout = EditorGUILayout.Foldout(
                 _classFoldouts[state.ClassName],
                 state.ClassName,
                 true,
                 foldoutStyle
             );
 
+            if (newFoldout != _classFoldouts[state.ClassName])
+            {
+                _classFoldouts[state.ClassName] = newFoldout;
+                EditorPrefs.SetBool(GetClassKey(state.ClassName), newFoldout);
+            }
+
             if (_classFoldouts[state.ClassName])
             {
+                EditorGUI.indentLevel++;
                 if (GUILayout.Button("📄 Open Script", EditorStyles.miniButton))
                 {
                     _highlightedState = state.ClassName;
@@ -115,6 +128,7 @@ namespace KToolkit
 
                 if (state.Transitions.Count == 0)
                 {
+                    GUILayout.Space(2);
                     EditorGUILayout.LabelField("    (No transitions)", EditorStyles.miniLabel);
                 }
                 else
@@ -122,12 +136,11 @@ namespace KToolkit
                     foreach (var trans in state.Transitions)
                     {
                         EditorGUILayout.BeginHorizontal();
-                        GUILayout.Space(20);
+                        GUILayout.Space(45);
                         EditorGUILayout.LabelField("→", GUILayout.Width(15));
 
                         GUIStyle targetStyle = new(EditorStyles.label)
                         {
-                            // normal = { textColor = (trans.TargetState == _highlightedState) ? Color.green : Color.white }
                             normal = { textColor = Color.green }
                         };
 
@@ -137,9 +150,7 @@ namespace KToolkit
                             OpenScriptAtLine(trans.SourceFile, trans.LineNumber);
                         }
 
-                        GUILayout.Space(10);
-
-                        // 显示行号并可点击跳转
+                        // GUILayout.Space(50);
                         if (GUILayout.Button($"(line {trans.LineNumber})", EditorStyles.miniLabel, GUILayout.Width(80)))
                         {
                             OpenScriptAtLine(trans.SourceFile, trans.LineNumber);
@@ -148,8 +159,11 @@ namespace KToolkit
                         EditorGUILayout.EndHorizontal();
                     }
                 }
+
+                EditorGUI.indentLevel--;
             }
 
+            EditorGUI.indentLevel--;
             EditorGUILayout.EndVertical();
         }
 
@@ -223,5 +237,9 @@ namespace KToolkit
                 Debug.LogWarning($"Could not open file: {filePath}");
             }
         }
+
+        // ==== EditorPrefs key helpers ====
+        private string GetOwnerKey(string ownerType) => $"KStateMachineVisualizer.Owner.{ownerType}";
+        private string GetClassKey(string className) => $"KStateMachineVisualizer.Class.{className}";
     }
 }
