@@ -9,41 +9,69 @@ namespace KToolkit
 {
     public class KStateMachineVisualizer : EditorWindow
     {
+        // ===============================
+        // 数据结构 / Data Structures
+        // ===============================
         private class StateTransition
         {
-            public string TargetState;
-            public string SourceFile;
-            public int LineNumber;
+            public string TargetState;   // 目标状态类名 / Target state class name
+            public string SourceFile;    // 源文件路径 / Source file path
+            public int LineNumber;       // 行号 / Line number
         }
 
         private class StateClassInfo
         {
-            public string ClassName;
-            public string OwnerType;
-            public string FilePath;
-            public List<StateTransition> Transitions = new();
+            public string ClassName;             // 状态类名 / State class name
+            public string OwnerType;             // 宿主类型 / Owner type
+            public string FilePath;              // 文件路径 / File path
+            public List<StateTransition> Transitions = new(); // 状态转移列表 / Transition list
         }
 
+        // ===============================
+        // 字段 / Fields
+        // ===============================
         private Dictionary<string, List<StateClassInfo>> _stateByOwner = new();
         private Vector2 _scrollPos;
         private string _highlightedState = null;
+        private string _searchQuery = "";
 
-        // 折叠状态
+        // 折叠记忆 / Foldout memory
         private Dictionary<string, bool> _ownerFoldouts = new();
         private Dictionary<string, bool> _classFoldouts = new();
 
+        // 统计数据 / Statistics
+        private int _totalOwners;
+        private int _totalStates;
+        private int _totalTransitions;
+
+        // 图标缓存 / Icon cache
+        private Texture2D _scriptIcon;
+
+        // ===============================
+        // 菜单入口 / Menu Entry
+        // ===============================
         [MenuItem("KToolkit/State Machine Visualizer")]
         public static void ShowWindow()
         {
             GetWindow<KStateMachineVisualizer>("State Machine Visualizer");
         }
 
+        // ===============================
+        // 初始化 / Initialization
+        // ===============================
+        private void OnEnable()
+        {
+            // 载入Unity自带脚本图标 / Load built-in script icon
+            _scriptIcon = EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D;
+        }
+
+        // ===============================
+        // 绘制主界面 / Draw main window
+        // ===============================
         private void OnGUI()
         {
-            if (GUILayout.Button("Refresh States"))
-            {
-                RefreshStateInfo();
-            }
+            DrawToolbar();
+            DrawStatisticsPanel();
 
             if (_stateByOwner.Count == 0)
             {
@@ -52,10 +80,19 @@ namespace KToolkit
             }
 
             _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
+            bool hasResult = false;
 
             foreach (var ownerGroup in _stateByOwner)
             {
-                // 一级：宿主类型折叠
+                // 过滤宿主类型和状态名 / Filter owners & states
+                bool ownerMatch = string.IsNullOrEmpty(_searchQuery) ||
+                                  ownerGroup.Key.ToLower().Contains(_searchQuery.ToLower()) ||
+                                  ownerGroup.Value.Any(s => s.ClassName.ToLower().Contains(_searchQuery.ToLower()));
+
+                if (!ownerMatch) continue;
+                hasResult = true;
+
+                // 宿主折叠 / Owner foldout
                 if (!_ownerFoldouts.ContainsKey(ownerGroup.Key))
                     _ownerFoldouts[ownerGroup.Key] = EditorPrefs.GetBool(GetOwnerKey(ownerGroup.Key), true);
 
@@ -74,42 +111,175 @@ namespace KToolkit
 
                 if (_ownerFoldouts[ownerGroup.Key])
                 {
-                    GUILayout.Space(5);
+                    GUILayout.Space(4);
                     EditorGUI.indentLevel++;
+
                     foreach (var state in ownerGroup.Value)
                     {
+                        if (!string.IsNullOrEmpty(_searchQuery) &&
+                            !state.ClassName.ToLower().Contains(_searchQuery.ToLower()) &&
+                            !ownerGroup.Key.ToLower().Contains(_searchQuery.ToLower()))
+                            continue;
+
                         DrawStateEntry(state);
                     }
+
                     EditorGUI.indentLevel--;
                 }
 
-                GUILayout.Space(20);
+                GUILayout.Space(15);
+            }
+
+            if (!hasResult)
+            {
+                GUILayout.Space(10);
+                EditorGUILayout.HelpBox("No matching results found.", MessageType.Info);
             }
 
             EditorGUILayout.EndScrollView();
         }
 
+        // ===============================
+        // 工具栏 / Toolbar
+        // ===============================
+        private void DrawToolbar()
+        {
+            GUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+            if (GUILayout.Button("Refresh States", EditorStyles.toolbarButton, GUILayout.Width(120)))
+            {
+                RefreshStateInfo();
+            }
+
+            GUILayout.Space(10);
+            GUILayout.Label("Search:", GUILayout.Width(50));
+
+            // 搜索栏扩大尺寸 / Widen search bar
+            string newQuery = GUILayout.TextField(_searchQuery, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
+            if (newQuery != _searchQuery)
+            {
+                _searchQuery = newQuery;
+            }
+
+            if (GUILayout.Button("✖", EditorStyles.toolbarButton, GUILayout.Width(25)))
+            {
+                _searchQuery = "";
+                GUI.FocusControl(null);
+            }
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+        }
+
+        // ===============================
+        // 统计信息面板 / Statistics panel
+        // ===============================
+        private void DrawStatisticsPanel()
+        {
+            if (_totalStates == 0 && _totalOwners == 0) return;
+
+            EditorGUILayout.BeginVertical("box");
+            GUILayout.Label("📊 Statistics / 状态统计信息", EditorStyles.boldLabel);
+            GUILayout.Space(4);
+
+            EditorGUILayout.BeginHorizontal();
+
+            void ExpandAllOwners()
+            {
+                foreach (var key in _ownerFoldouts.Keys.ToList())
+                {
+                    _ownerFoldouts[key] = true;
+                    EditorPrefs.SetBool(GetOwnerKey(key), true);
+                }
+            }
+
+            void FoldAllStates()
+            {
+                foreach (var kvp in _stateByOwner)
+                {
+                    foreach (var cls in kvp.Value)
+                    {
+                        _classFoldouts[cls.ClassName] = false;
+                        EditorPrefs.SetBool(GetClassKey(cls.ClassName), false);
+                    }
+                }
+            }
+            
+            if (GUILayout.Button($"Owners: {_totalOwners}", EditorStyles.miniButton, GUILayout.Width(110)))
+            {
+                ExpandAllOwners();
+                FoldAllStates();
+            }
+
+            if (GUILayout.Button($"States: {_totalStates}", EditorStyles.miniButton, GUILayout.Width(110)))
+            {
+                ExpandAllOwners();
+                foreach (var key in _classFoldouts.Keys.ToList())
+                {
+                    _classFoldouts[key] = true;
+                    EditorPrefs.SetBool(GetClassKey(key), true);
+                }
+            }
+
+            if (GUILayout.Button($"Transitions: {_totalTransitions}", EditorStyles.miniButton, GUILayout.Width(130)))
+            {
+                ExpandAllOwners();
+                FoldAllStates();
+                foreach (var kvp in _stateByOwner)
+                {
+                    foreach (var cls in kvp.Value)
+                    {
+                        if (cls.Transitions.Count > 0)
+                        {
+                            _classFoldouts[cls.ClassName] = true;
+                            EditorPrefs.SetBool(GetClassKey(cls.ClassName), true);
+                        }
+                    }
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
+
+            GUILayout.Space(10);
+        }
+
+        // ===============================
+        // 绘制状态类 / Draw state class
+        // ===============================
         private void DrawStateEntry(StateClassInfo state)
         {
             if (!_classFoldouts.ContainsKey(state.ClassName))
                 _classFoldouts[state.ClassName] = EditorPrefs.GetBool(GetClassKey(state.ClassName), false);
 
-            GUIStyle foldoutStyle = new(EditorStyles.foldout);
-            foldoutStyle.normal.textColor = Color.cyan;
-            foldoutStyle.onNormal.textColor = Color.cyan;
-            foldoutStyle.hover.textColor = Color.cyan;
-            foldoutStyle.onHover.textColor = Color.cyan;
-            foldoutStyle.fontStyle = state.ClassName == _highlightedState ? FontStyle.Bold : FontStyle.Normal;
+            GUIStyle foldoutStyle = new(EditorStyles.foldout)
+            {
+                normal = { textColor = Color.cyan },
+                onNormal = { textColor = Color.cyan },
+                hover = { textColor = Color.cyan },
+                onHover = { textColor = Color.cyan },
+                fontStyle = state.ClassName == _highlightedState ? FontStyle.Bold : FontStyle.Normal
+            };
 
             EditorGUILayout.BeginVertical("box");
             EditorGUI.indentLevel++;
 
+            // 状态类名 + 脚本图标按钮（带悬停提示） / State name + icon button with tooltip
+            EditorGUILayout.BeginHorizontal();
             bool newFoldout = EditorGUILayout.Foldout(
                 _classFoldouts[state.ClassName],
                 state.ClassName,
                 true,
                 foldoutStyle
             );
+
+            GUIContent iconContent = new GUIContent(_scriptIcon, "Open Script File / 打开脚本文件");
+            if (GUILayout.Button(iconContent, GUIStyle.none, GUILayout.Width(20), GUILayout.Height(20)))
+            {
+                _highlightedState = state.ClassName;
+                OpenScriptAtLine(state.FilePath, 1);
+            }
+            EditorGUILayout.EndHorizontal();
 
             if (newFoldout != _classFoldouts[state.ClassName])
             {
@@ -120,16 +290,10 @@ namespace KToolkit
             if (_classFoldouts[state.ClassName])
             {
                 EditorGUI.indentLevel++;
-                if (GUILayout.Button("📄 Open Script", EditorStyles.miniButton))
-                {
-                    _highlightedState = state.ClassName;
-                    OpenScriptAtLine(state.FilePath, 1);
-                }
-
                 if (state.Transitions.Count == 0)
                 {
                     GUILayout.Space(2);
-                    EditorGUILayout.LabelField("    (No transitions)", EditorStyles.miniLabel);
+                    EditorGUILayout.LabelField("    (No transitions / 无状态转移)", EditorStyles.miniLabel);
                 }
                 else
                 {
@@ -150,7 +314,6 @@ namespace KToolkit
                             OpenScriptAtLine(trans.SourceFile, trans.LineNumber);
                         }
 
-                        // GUILayout.Space(50);
                         if (GUILayout.Button($"(line {trans.LineNumber})", EditorStyles.miniLabel, GUILayout.Width(80)))
                         {
                             OpenScriptAtLine(trans.SourceFile, trans.LineNumber);
@@ -159,7 +322,6 @@ namespace KToolkit
                         EditorGUILayout.EndHorizontal();
                     }
                 }
-
                 EditorGUI.indentLevel--;
             }
 
@@ -167,9 +329,15 @@ namespace KToolkit
             EditorGUILayout.EndVertical();
         }
 
+        // ===============================
+        // 刷新状态信息 / Refresh state data
+        // ===============================
         private void RefreshStateInfo()
         {
             _stateByOwner.Clear();
+            _totalOwners = 0;
+            _totalStates = 0;
+            _totalTransitions = 0;
 
             string[] files = Directory.GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories);
             Regex statePattern = new(@"class\s+(\w+)\s*:[A-Za-z ., \s]*KIBaseState\s*<\s*([\w\d_]+)\s*>", RegexOptions.Compiled);
@@ -185,7 +353,7 @@ namespace KToolkit
                     {
                         string className = stateMatch.Groups[1].Value;
                         string ownerType = stateMatch.Groups[2].Value;
-                        KDebugLogger.Cortex_DebugLog("匹配状态成功", file, className, ownerType);
+                        KDebugLogger.Cortex_DebugLog("匹配状态成功 / Matched state", file, className, ownerType);
 
                         StateClassInfo stateInfo = new()
                         {
@@ -194,7 +362,7 @@ namespace KToolkit
                             FilePath = file
                         };
 
-                        // 扫描 TransitState 调用
+                        // 扫描TransitState调用 / Scan for TransitState<T> calls
                         for (int j = i; j < lines.Length; j++)
                         {
                             var transitMatch = transitPattern.Match(lines[j]);
@@ -208,7 +376,6 @@ namespace KToolkit
                                 });
                             }
 
-                            // 检查是否到达下一个类定义
                             if (j != i && lines[j].Contains("class "))
                                 break;
                         }
@@ -221,9 +388,16 @@ namespace KToolkit
                 }
             }
 
-            Debug.Log($"[StateMachineVisualizer] Found {_stateByOwner.Sum(x => x.Value.Count)} state classes.");
+            _totalOwners = _stateByOwner.Count;
+            _totalStates = _stateByOwner.Sum(o => o.Value.Count);
+            _totalTransitions = _stateByOwner.Sum(o => o.Value.Sum(s => s.Transitions.Count));
+
+            Debug.Log($"[StateMachineVisualizer] Found {_totalStates} state classes in {_totalOwners} owners with {_totalTransitions} transitions.");
         }
 
+        // ===============================
+        // 打开脚本到指定行 / Open script at line
+        // ===============================
         private void OpenScriptAtLine(string filePath, int line)
         {
             string assetPath = "Assets" + filePath.Replace(Application.dataPath, "");
@@ -238,7 +412,9 @@ namespace KToolkit
             }
         }
 
-        // ==== EditorPrefs key helpers ====
+        // ===============================
+        // EditorPrefs键生成 / EditorPrefs key helpers
+        // ===============================
         private string GetOwnerKey(string ownerType) => $"KStateMachineVisualizer.Owner.{ownerType}";
         private string GetClassKey(string className) => $"KStateMachineVisualizer.Class.{className}";
     }
