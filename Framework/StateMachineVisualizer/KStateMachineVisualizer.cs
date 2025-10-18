@@ -145,11 +145,13 @@ namespace KToolkit
         private void DrawToolbar()
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
-
+            
+            GUI.color = Color.green;
             if (GUILayout.Button("Refresh States", EditorStyles.toolbarButton, GUILayout.Width(120)))
             {
                 RefreshStateInfo();
             }
+            GUI.color = Color.white;
 
             if (GUILayout.Button("Export Markdown", EditorStyles.toolbarButton, GUILayout.Width(130)))
             {
@@ -161,10 +163,7 @@ namespace KToolkit
 
             // 搜索栏扩大尺寸 / Widen search bar
             string newQuery = GUILayout.TextField(_searchQuery, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
-            if (newQuery != _searchQuery)
-            {
-                _searchQuery = newQuery;
-            }
+            _searchQuery = newQuery;
 
             if (GUILayout.Button("✖", EditorStyles.toolbarButton, GUILayout.Width(25)))
             {
@@ -189,19 +188,19 @@ namespace KToolkit
 
             EditorGUILayout.BeginHorizontal();
 
-            if (GUILayout.Button($"Owners: {_totalOwners}", EditorStyles.miniButton, GUILayout.Width(110)))
+            if (GUILayout.Button($"Expand Owners: {_totalOwners}", EditorStyles.miniButton, GUILayout.Width(150)))
             {
                 ExpandAllStates(false);
                 ExpandAllOwners();
             }
 
-            if (GUILayout.Button($"States: {_totalStates}", EditorStyles.miniButton, GUILayout.Width(110)))
+            if (GUILayout.Button($"Expand States: {_totalStates}", EditorStyles.miniButton, GUILayout.Width(150)))
             {
                 ExpandAllOwners();
                 ExpandAllStates();
             }
 
-            if (GUILayout.Button($"Transitions: {_totalTransitions}", EditorStyles.miniButton, GUILayout.Width(130)))
+            if (GUILayout.Button($"Expand Transitions: {_totalTransitions}", EditorStyles.miniButton, GUILayout.Width(150)))
             {
                 ExpandAllOwners();
                 ExpandAllStates(false);
