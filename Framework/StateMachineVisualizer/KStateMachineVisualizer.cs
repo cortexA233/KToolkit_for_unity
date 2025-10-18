@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -61,8 +62,7 @@ namespace KToolkit
         // ===============================
         private void OnEnable()
         {
-            // 载入Unity自带脚本图标 / Load built-in script icon
-            _scriptIcon = EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D;
+            _scriptIcon = EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D; // 加载脚本图标 / Load built-in script icon
         }
 
         // ===============================
@@ -151,6 +151,11 @@ namespace KToolkit
                 RefreshStateInfo();
             }
 
+            if (GUILayout.Button("Export Markdown", EditorStyles.toolbarButton, GUILayout.Width(130)))
+            {
+                ExportMarkdownReport();
+            }
+
             GUILayout.Space(10);
             GUILayout.Label("Search:", GUILayout.Width(50));
 
@@ -184,47 +189,22 @@ namespace KToolkit
 
             EditorGUILayout.BeginHorizontal();
 
-            void ExpandAllOwners()
-            {
-                foreach (var key in _ownerFoldouts.Keys.ToList())
-                {
-                    _ownerFoldouts[key] = true;
-                    EditorPrefs.SetBool(GetOwnerKey(key), true);
-                }
-            }
-
-            void FoldAllStates()
-            {
-                foreach (var kvp in _stateByOwner)
-                {
-                    foreach (var cls in kvp.Value)
-                    {
-                        _classFoldouts[cls.ClassName] = false;
-                        EditorPrefs.SetBool(GetClassKey(cls.ClassName), false);
-                    }
-                }
-            }
-            
             if (GUILayout.Button($"Owners: {_totalOwners}", EditorStyles.miniButton, GUILayout.Width(110)))
             {
+                ExpandAllStates(false);
                 ExpandAllOwners();
-                FoldAllStates();
             }
 
             if (GUILayout.Button($"States: {_totalStates}", EditorStyles.miniButton, GUILayout.Width(110)))
             {
                 ExpandAllOwners();
-                foreach (var key in _classFoldouts.Keys.ToList())
-                {
-                    _classFoldouts[key] = true;
-                    EditorPrefs.SetBool(GetClassKey(key), true);
-                }
+                ExpandAllStates();
             }
 
             if (GUILayout.Button($"Transitions: {_totalTransitions}", EditorStyles.miniButton, GUILayout.Width(130)))
             {
                 ExpandAllOwners();
-                FoldAllStates();
+                ExpandAllStates(false);
                 foreach (var kvp in _stateByOwner)
                 {
                     foreach (var cls in kvp.Value)
@@ -240,8 +220,25 @@ namespace KToolkit
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
-
             GUILayout.Space(10);
+        }
+
+        private void ExpandAllOwners(bool isExpand = true)
+        {
+            foreach (var key in _ownerFoldouts.Keys.ToList())
+            {
+                _ownerFoldouts[key] = isExpand;
+                EditorPrefs.SetBool(GetOwnerKey(key), isExpand);
+            }
+        }
+
+        private void ExpandAllStates(bool isExpand = true)
+        {
+            foreach (var key in _classFoldouts.Keys.ToList())
+            {
+                _classFoldouts[key] = isExpand;
+                EditorPrefs.SetBool(GetClassKey(key), isExpand);
+            }
         }
 
         // ===============================
@@ -264,7 +261,7 @@ namespace KToolkit
             EditorGUILayout.BeginVertical("box");
             EditorGUI.indentLevel++;
 
-            // 状态类名 + 脚本图标按钮（带悬停提示） / State name + icon button with tooltip
+            // 状态类名 + 打开脚本按钮（带图标和文字） / State name + "Open Script" button
             EditorGUILayout.BeginHorizontal();
             bool newFoldout = EditorGUILayout.Foldout(
                 _classFoldouts[state.ClassName],
@@ -273,12 +270,6 @@ namespace KToolkit
                 foldoutStyle
             );
 
-            GUIContent iconContent = new GUIContent(_scriptIcon, "Open Script File / 打开脚本文件");
-            if (GUILayout.Button(iconContent, GUIStyle.none, GUILayout.Width(20), GUILayout.Height(20)))
-            {
-                _highlightedState = state.ClassName;
-                OpenScriptAtLine(state.FilePath, 1);
-            }
             EditorGUILayout.EndHorizontal();
 
             if (newFoldout != _classFoldouts[state.ClassName])
@@ -318,6 +309,13 @@ namespace KToolkit
                         {
                             OpenScriptAtLine(trans.SourceFile, trans.LineNumber);
                         }
+                        
+                        GUIContent iconContent = new GUIContent(_scriptIcon, "Open Script File / 打开脚本文件");
+                        if (GUILayout.Button(new GUIContent(iconContent) { text = $"Open Script at line {trans.LineNumber}" }, EditorStyles.miniButton, GUILayout.Width(210)))
+                        {
+                            _highlightedState = state.ClassName;
+                            OpenScriptAtLine(state.FilePath, trans.LineNumber);
+                        }
 
                         EditorGUILayout.EndHorizontal();
                     }
@@ -327,6 +325,57 @@ namespace KToolkit
 
             EditorGUI.indentLevel--;
             EditorGUILayout.EndVertical();
+        }
+
+        // ===============================
+        // 导出报告 / Export Markdown report
+        // ===============================
+        private void ExportMarkdownReport()
+        {
+            string savePath = Path.Combine(Application.dataPath, "KStateMachineReport.md");
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("# 🎮 KStateMachine Visualizer Report");
+            sb.AppendLine();
+            sb.AppendLine($"Generated on: **{System.DateTime.Now}**");
+            sb.AppendLine();
+            sb.AppendLine($"Total Owners: **{_totalOwners}**");
+            sb.AppendLine($"Total States: **{_totalStates}**");
+            sb.AppendLine($"Total Transitions: **{_totalTransitions}**");
+            sb.AppendLine("\n---\n");
+
+            foreach (var ownerGroup in _stateByOwner)
+            {
+                sb.AppendLine($"## 🧩 Owner Type: {ownerGroup.Key}");
+                sb.AppendLine();
+
+                foreach (var state in ownerGroup.Value)
+                {
+                    sb.AppendLine($"### 🔹 {state.ClassName}");
+                    sb.AppendLine($"*File:* `{Path.GetFileName(state.FilePath)}`");
+
+                    if (state.Transitions.Count == 0)
+                    {
+                        sb.AppendLine("- (No transitions)");
+                    }
+                    else
+                    {
+                        foreach (var t in state.Transitions)
+                        {
+                            sb.AppendLine($"- → **{t.TargetState}** _(line {t.LineNumber})_");
+                        }
+                    }
+
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine();
+            }
+
+            File.WriteAllText(savePath, sb.ToString(), Encoding.UTF8);
+            AssetDatabase.Refresh();
+
+            EditorUtility.DisplayDialog("Export Complete ✅", $"Markdown report saved to:\n{savePath}", "OK");
         }
 
         // ===============================
@@ -353,7 +402,6 @@ namespace KToolkit
                     {
                         string className = stateMatch.Groups[1].Value;
                         string ownerType = stateMatch.Groups[2].Value;
-                        KDebugLogger.Cortex_DebugLog("匹配状态成功 / Matched state", file, className, ownerType);
 
                         StateClassInfo stateInfo = new()
                         {
@@ -362,7 +410,6 @@ namespace KToolkit
                             FilePath = file
                         };
 
-                        // 扫描TransitState调用 / Scan for TransitState<T> calls
                         for (int j = i; j < lines.Length; j++)
                         {
                             var transitMatch = transitPattern.Match(lines[j]);
@@ -392,7 +439,7 @@ namespace KToolkit
             _totalStates = _stateByOwner.Sum(o => o.Value.Count);
             _totalTransitions = _stateByOwner.Sum(o => o.Value.Sum(s => s.Transitions.Count));
 
-            Debug.Log($"[StateMachineVisualizer] Found {_totalStates} state classes in {_totalOwners} owners with {_totalTransitions} transitions.");
+            Debug.Log($"[KStateMachineVisualizer] Found {_totalStates} state classes in {_totalOwners} owners with {_totalTransitions} transitions.");
         }
 
         // ===============================
@@ -403,13 +450,9 @@ namespace KToolkit
             string assetPath = "Assets" + filePath.Replace(Application.dataPath, "");
             UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
             if (obj != null)
-            {
                 AssetDatabase.OpenAsset(obj, line);
-            }
             else
-            {
                 Debug.LogWarning($"Could not open file: {filePath}");
-            }
         }
 
         // ===============================
