@@ -10,9 +10,8 @@ namespace KToolkit
     public class KTimerManager : KSingletonNoMono<KTimerManager>
     {
         private readonly List<DelayFuncInfo> delayTimerList = new List<DelayFuncInfo>();
-        private readonly Dictionary<int, DelayFuncInfo> timerLookup = new Dictionary<int, DelayFuncInfo>();
+        private readonly Dictionary<Guid, DelayFuncInfo> timerLookup = new Dictionary<Guid, DelayFuncInfo>();
         private readonly Stack<DelayFuncInfo> infoPool = new Stack<DelayFuncInfo>();
-        private int nextTimerId = 1;
 
         /// <summary>
         /// 默认使用 Unity 的 <see cref="Time.deltaTime"/> 与 <see cref="Time.unscaledDeltaTime"/> 更新定时器。
@@ -82,8 +81,8 @@ namespace KToolkit
         /// <param name="delayTime">首次触发前的等待时间。</param>
         /// <param name="func">触发时执行的回调。</param>
         /// <param name="args">回调参数。</param>
-        /// <returns>定时器的唯一标识，用于后续管理。</returns>
-        public int AddDelayTimerFunc(float delayTime, UnityAction<object[]> func, params object[] args)
+        /// <returns>定时器的唯一标识（<see cref="Guid"/>），用于后续管理。</returns>
+        public Guid AddDelayTimerFunc(float delayTime, UnityAction<object[]> func, params object[] args)
         {
             return AddDelayTimerFunc(delayTime, func, false, -1f, false, args);
         }
@@ -97,8 +96,8 @@ namespace KToolkit
         /// <param name="repeatInterval">循环间隔，小于等于 0 时会使用 <paramref name="delayTime"/>。</param>
         /// <param name="useUnscaledTime">是否使用 <see cref="Time.unscaledDeltaTime"/> 计时。</param>
         /// <param name="args">回调参数。</param>
-        /// <returns>定时器的唯一标识，用于后续管理。</returns>
-        public int AddDelayTimerFunc(float delayTime, UnityAction<object[]> func, bool loop, float repeatInterval, bool useUnscaledTime, params object[] args)
+        /// <returns>定时器的唯一标识（<see cref="Guid"/>），用于后续管理。</returns>
+        public Guid AddDelayTimerFunc(float delayTime, UnityAction<object[]> func, bool loop, float repeatInterval, bool useUnscaledTime, params object[] args)
         {
             if (func == null)
             {
@@ -106,7 +105,7 @@ namespace KToolkit
             }
 
             DelayFuncInfo info = infoPool.Count > 0 ? infoPool.Pop() : new DelayFuncInfo();
-            info.Reset(nextTimerId++, delayTime, loop, repeatInterval, useUnscaledTime, func, args);
+            info.Reset(Guid.NewGuid(), delayTime, loop, repeatInterval, useUnscaledTime, func, args);
 
             delayTimerList.Add(info);
             timerLookup[info.Id] = info;
@@ -117,7 +116,7 @@ namespace KToolkit
         /// <summary>
         /// 移除指定定时器。
         /// </summary>
-        public bool RemoveTimer(int timerId)
+        public bool RemoveTimer(Guid timerId)
         {
             if (!timerLookup.TryGetValue(timerId, out DelayFuncInfo info))
             {
@@ -132,7 +131,7 @@ namespace KToolkit
         /// <summary>
         /// 暂停指定定时器。
         /// </summary>
-        public bool PauseTimer(int timerId)
+        public bool PauseTimer(Guid timerId)
         {
             if (!timerLookup.TryGetValue(timerId, out DelayFuncInfo info) || !info.IsActive)
             {
@@ -146,7 +145,7 @@ namespace KToolkit
         /// <summary>
         /// 恢复指定定时器。
         /// </summary>
-        public bool ResumeTimer(int timerId)
+        public bool ResumeTimer(Guid timerId)
         {
             if (!timerLookup.TryGetValue(timerId, out DelayFuncInfo info) || !info.IsActive)
             {
@@ -160,7 +159,7 @@ namespace KToolkit
         /// <summary>
         /// 获取指定定时器剩余时间。
         /// </summary>
-        public bool TryGetRemainingTime(int timerId, out float remainingTime)
+        public bool TryGetRemainingTime(Guid timerId, out float remainingTime)
         {
             if (timerLookup.TryGetValue(timerId, out DelayFuncInfo info) && info.IsActive)
             {
@@ -175,7 +174,7 @@ namespace KToolkit
         /// <summary>
         /// 检查定时器是否存在且处于激活状态。
         /// </summary>
-        public bool ContainsTimer(int timerId)
+        public bool ContainsTimer(Guid timerId)
         {
             return timerLookup.TryGetValue(timerId, out DelayFuncInfo info) && info.IsActive;
         }
@@ -198,7 +197,7 @@ namespace KToolkit
             DelayFuncInfo info = delayTimerList[index];
             delayTimerList.RemoveAt(index);
 
-            if (info.Id != 0)
+            if (info.Id != Guid.Empty)
             {
                 timerLookup.Remove(info.Id);
             }
@@ -209,7 +208,7 @@ namespace KToolkit
 
     class DelayFuncInfo
     {
-        public int Id { get; private set; }
+        public Guid Id { get; private set; }
         public float RemainingTime { get; set; }
         public float Interval { get; private set; }
         public bool Loop { get; private set; }
@@ -219,7 +218,7 @@ namespace KToolkit
         public UnityAction<object[]> Func { get; private set; }
         public object[] Args { get; private set; }
 
-        public DelayFuncInfo Reset(int id, float delayTime, bool loop, float repeatInterval, bool useUnscaledTime, UnityAction<object[]> func, object[] args)
+        public DelayFuncInfo Reset(Guid id, float delayTime, bool loop, float repeatInterval, bool useUnscaledTime, UnityAction<object[]> func, object[] args)
         {
             Id = id;
             RemainingTime = delayTime;
@@ -235,7 +234,7 @@ namespace KToolkit
 
         public DelayFuncInfo Reset()
         {
-            Id = 0;
+            Id = Guid.Empty;
             RemainingTime = 0f;
             Interval = 0f;
             Loop = false;
