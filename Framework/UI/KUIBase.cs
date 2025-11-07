@@ -26,7 +26,7 @@ namespace KToolkit
         {
             // T newCell = KUIManager.instance.CreateUI<T>(args);
             T newCell = new T();
-            
+
             // todo 这里应该改成把cell和base区分开的
             // var newCell = new T();
             Transform transformParent = parent ?? transform;
@@ -47,7 +47,22 @@ namespace KToolkit
             childCellPool.Add(newCell);
             return newCell;
         }
-    
+
+        protected void DestroyUICell(KUICell cell)
+        {
+            if (cell == null)
+            {
+                return;
+            }
+
+            if (childCellPool.Contains(cell))
+            {
+                childCellPool.Remove(cell);
+            }
+
+            cell.DestroySelf();
+        }
+
         public override void DestroySelf()
         {
             if (isDestroyed)
@@ -55,9 +70,9 @@ namespace KToolkit
                 return;
             }
     
-            for (int i = 0; i < childCellPool.Count; ++i)
+            for (int i = childCellPool.Count - 1; i >= 0; --i)
             {
-                childCellPool[i].DestroySelf();
+                DestroyUICell(childCellPool[i]);
             }
             base.DestroySelf();
             KUIManager.instance.DestroyUI(this);
