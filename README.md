@@ -4,13 +4,13 @@ A lightweight Unity gameplay framework originally created for the indie game **E
 
 ## Quick Start
 1. **Import the framework**
-   1.1 Use the Release package (recommended)
+   * Use the Release package (recommended)
       - Download the latest `.unitypackage` from GitHub Releases and import it.
       - The package already includes a preconfigured scene and sample scripts. After importing, you can open
         `KEntrance.unity` to try it out.
       - The framework bootstrap code is already included in `KEntrance.unity`. Make sure your game starts from
         this scene, or refactor the startup/initialization on your own.
-   1.2 Configure manually from source
+   * Configure manually from source
       - Copy `Framework/` and `Framework_Editor/` into any folder under your Unity project's `Assets/`.
       - **Prepare the default manager scene objects with the following GameObjects and components**:
          - `KCanvas` (UI root; must have a UGUI Canvas component)
