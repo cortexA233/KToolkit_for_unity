@@ -12,20 +12,11 @@ namespace KToolkit
         static KDebugLogger()
         {
             InitDebuggerConfig();
-            debuggerConfig["UI"] = true;
         }
         
         private static void InitDebuggerConfig()
         {
-            debuggerConfig["UI"] = true;
-            debuggerConfig["Battle"] = true;
-            debuggerConfig["System"] = true;
-            debuggerConfig["Player"] = true;
-            debuggerConfig["Level"] = true;
-        
-            debuggerConfig["Cortex"] = true;
-            debuggerConfig["Veyo"] = false;
-            debuggerConfig["Shin"] = true;
+            debuggerConfig["Example"] = true;
         }
 
         private static string DebuggerConcatArgs(params object[] args)
