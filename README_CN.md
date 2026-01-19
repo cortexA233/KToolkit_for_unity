@@ -4,21 +4,24 @@
 
 ## 快速开始
 1. **导入框架**
-   - 推荐：在 GitHub Releases 中下载 `KToolkit_release_0.1.unitypackage` 并导入。
-     - 该包内已包含预配置场景与示例脚本，导入后可直接打开示例场景体验。
-   - 或者直接将 `Framework/` 与 `Framework_Editor/` 复制到 Unity `Assets/` 目录。
-2. **如果是手动复制源码**，需要准备默认管理器使用的场景对象：
-   - `KCanvas`（UI 根节点）
-   - `Main Camera`
-   - `EventSystem`
-   - `pool_transform_parent`（对象池挂载点）
-3. **启动时初始化一次**
-   - 在入口脚本中调用 `KFrameworkManager.instance.InitKFramework()`。
+   1.1 直接使用Release版本（推荐）
+      - 在 GitHub Releases 中下载 ''最新的unitypackage文件'' 并导入引擎。
+      - 该包内已包含预配置场景与示例脚本，导入后可直接打开示例场景 `KEntrance.unity` 体验。
+      - 框架的启动代码已经包含在 `KEntrance.unity` 场景中，需要确保启动/进入游戏时必须以这个场景作为入口，或自行重构框架的启动和初始化方式。
+    
+   1.2 从源码开始手动配置框架
+      - 直接将 `Framework/` 与 `Framework_Editor/` 复制到 Unity工程 `Assets/` 下的任意目录。
+      - **需要准备默认管理器使用的场景，包含以下GameObject和对应的组件**：
+         - `KCanvas`（UI 根节点，需要包含UGUI的Canvas组件）
+         - `Main Camera` （场景的默认主相机）
+         - `EventSystem` （需要包含UGUI交互需要使用的EvnetSystem组件）
+         - `pool_transform_parent`（空物体，对象池挂载点）
+      - 以上准备完成后，在自己的脚本中调用 `KFrameworkManager.instance.InitKFramework()`。即可启动并初始化本框架的功能。
 
 ## 项目结构
 - `Framework/` 运行时系统：事件、UI、状态机、定时器、Tick、对象池、音频等。
 - `Framework_Editor/` 编辑器工具。
-- `Logo/` 品牌资源。
+- `Logo/` 渲染仓库LOGO所使用的2D SDF shader。
 
 ## 事件系统
 ### 主要文件
