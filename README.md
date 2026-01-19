@@ -2,27 +2,28 @@
 A lightweight Unity gameplay framework originally created for the indie game **Exp10sion**.  
 <https://store.steampowered.com/app/2618850/Exp10sion/>
 
-简体中文文档：  
-<https://github.com/cortexA233/KToolkit_for_unity/blob/main/README_CN.md>
-
-## Getting Started
+## Quick Start
 1. **Import the framework**
-   - Recommended: download `KToolkit_release_0.1.unitypackage` from the GitHub Releases page and import it.
-     - This package already includes preconfigured scenes and sample scripts, so you can open the demo scene
-       directly after import.
-   - Alternatively, copy `Framework/` and `Framework_Editor/` into your Unity `Assets/` directory.
-2. **If you copied the source folders manually**, prepare the scene objects used by the default managers:
-   - `KCanvas` (UI root)
-   - `Main Camera`
-   - `EventSystem`
-   - `pool_transform_parent` (used by `ObjectsPool`)
-3. **Initialize once on startup**
-   - Call `KFrameworkManager.instance.InitKFramework()` from your entry script.
+   1.1 Use the Release package (recommended)
+      - Download the latest `.unitypackage` from GitHub Releases and import it.
+      - The package already includes a preconfigured scene and sample scripts. After importing, you can open
+        `KEntrance.unity` to try it out.
+      - The framework bootstrap code is already included in `KEntrance.unity`. Make sure your game starts from
+        this scene, or refactor the startup/initialization on your own.
+   1.2 Configure manually from source
+      - Copy `Framework/` and `Framework_Editor/` into any folder under your Unity project's `Assets/`.
+      - **Prepare the default manager scene objects with the following GameObjects and components**:
+         - `KCanvas` (UI root; must have a UGUI Canvas component)
+         - `Main Camera` (default main camera)
+         - `EventSystem` (must include the UGUI EventSystem component)
+         - `pool_transform_parent` (empty object used as the pool mount point)
+      - After the setup, call `KFrameworkManager.instance.InitKFramework()` in your own script to boot and
+        initialize the framework.
 
 ## Project Structure
 - `Framework/` runtime systems: event system, UI framework, state machine, timers, tick system, pooling, audio, etc.
 - `Framework_Editor/` editor helpers.
-- `Logo/` branding assets.
+- `Logo/` 2D SDF shader used to render the repository logo.
 
 ## Event System
 ### Main Files
