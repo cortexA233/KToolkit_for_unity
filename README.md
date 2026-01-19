@@ -1,171 +1,145 @@
 # KToolkit
-A Simple Unity Game Logic Framework
-Originated from the indie game "Exp10sion"
-<u>https://store.steampowered.com/app/2618850/Exp10sion/</u>
+A lightweight Unity gameplay framework originally created for the indie game **Exp10sion**.  
+<https://store.steampowered.com/app/2618850/Exp10sion/>
 
-简体中文文档（施工中）：
-<u>[点击这里](https://github.com/cortexA233/KToolkit_for_unity/blob/main/README_CN.md)</u>
+简体中文文档：  
+<https://github.com/cortexA233/KToolkit_for_unity/blob/main/README_CN.md>
 
-# How to Get Started
-* Just simply download the unity package file: **KToolkit_release_0.1.unitypackage** in the root directory (well, I'll have a release version soon), and import it to your unity project.
-* If you want to use KToolkit, you need to call KFrameworkManager.Init() before you call other functions.
-* You need to initialize and enter your game in Entrance.unity scene.
+## Getting Started
+1. **Import the framework**
+   - Recommended: download `KToolkit_release_0.1.unitypackage` from the GitHub Releases page and import it.
+     - This package already includes preconfigured scenes and sample scripts, so you can open the demo scene
+       directly after import.
+   - Alternatively, copy `Framework/` and `Framework_Editor/` into your Unity `Assets/` directory.
+2. **If you copied the source folders manually**, prepare the scene objects used by the default managers:
+   - `KCanvas` (UI root)
+   - `Main Camera`
+   - `EventSystem`
+   - `pool_transform_parent` (used by `ObjectsPool`)
+3. **Initialize once on startup**
+   - Call `KFrameworkManager.instance.InitKFramework()` from your entry script.
 
-# Event System
-## Main Files
-* EventSystem.cs: A static class for global management of the event system, with the main external interface being the SendNotification series of methods used for sending event notifications. It supports variable parameters.
-* EventEnum.cs: Event enumeration, primarily used for adding event names. Event types may be expanded in the future.
-* KObserver.cs: Base class for observers, optional to inherit from MonoBehavior.
-## Usage
-* If a class wants to be an observer and integrate with the event system, it needs to inherit from KObserver (or KObserverNoMono if it doesn't want to inherit from MonoBehavior).
-* Use KObserver.AddEventListener() to register for listening to a specific event. The two parameters are: event name and the callback function for the event when the observer receives the corresponding notification. (You cannot register the same event multiple times; the last registration will overwrite previous callbacks).
-* Use EventSystem.SendNotification() to send event notifications. SendNotification() will iterate over all observers, remove any invalid ones, and call the callback for each valid observer corresponding to the event.
-## Example
-* The following is an example of implementing the Observer Pattern using the KObserverNoMono class and a regular MonoBehaviour script.
-* Attach the TestMono script to the scene, then press the K key to print out three corresponding lines of output (as shown in the code below).
+## Project Structure
+- `Framework/` runtime systems: event system, UI framework, state machine, timers, tick system, pooling, audio, etc.
+- `Framework_Editor/` editor helpers.
+- `Logo/` branding assets.
+
+## Event System
+### Main Files
+- `Framework/EventSystem/KEventSystem.cs`: `KEventManager` static dispatcher.
+- `Framework/EventSystem/KObserver.cs`: `KObserver` / `KObserverNoMono` base classes.
+- `Framework/Enums/KEventName.cs`: event name enum (extend it for your game).
+
+### Usage
+- Inherit from `KObserver` (for `MonoBehaviour`) or `KObserverNoMono` (plain C#).
+- Register listeners via `AddEventListener(eventName, callback)`.
+- Send events via `KEventManager.SendNotification(eventName, params object[] args)`.
+
+### Example
 ```csharp
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using KToolkit;
 
-
-// Event Sender, Could be anything, just call KEventManager.SendNotification
-public class TestMono : MonoBehavior
+public class TestMono : MonoBehaviour
 {
-    // Generate a Observer
-    TestObserverNoMono observer = new TestObserverNoMono();
+    private readonly TestObserverNoMono observer = new TestObserverNoMono();
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.K))
         {
-            int arg2 = 2;
-            int arg3 = 3;
-            // 
-            KEventManager.SendNotification(KEventName.TestEventName_1, "arg1", arg2, arg3);
+            KEventManager.SendNotification(KEventName.TestEvent, "arg1", 2, 3);
         }
     }
 }
 
-
-// The Observer，should extended from KObserver or KObserverNoMono
 public class TestObserverNoMono : KObserverNoMono
 {
-    // You can register event listener functions in the constructor, or in appropriate initialization methods such as Awake or Start of MonoBehaviour.
-    TestObserverNoMono()
+    public TestObserverNoMono()
     {
-        AddEventListener(KEventName.TestEventName_1, args =>
+        AddEventListener(KEventName.TestEvent, args =>
         {
-            Debug.Log("TestEventName_1 Triggered!!");   // will print：TestEventName_1 Triggered!!
-            Debug.Log((string)args[0]);    // will print：arg1
-            Debug.Log((int)args[1] + (int)args[2]);   // will print：5
+            Debug.Log("TestEvent Triggered!!");
+            Debug.Log((string)args[0]);
+            Debug.Log((int)args[1] + (int)args[2]);
         });
     }
 }
-
 ```
 
+## UI Framework
+### Main Files / Classes
+- `Framework/UI/KUIBase.cs`: base class for UI pages.
+- `Framework/UI/KUIManager.cs`: creation, destruction, and update.
+- `Framework/UI/KUIAttributes.cs`: `KUI_Info` / `KUI_Cell_Info` registration attributes.
+- `Framework/Enums/KPageEnum.cs`: `KUIManager` auto-registration helpers.
+- `Framework/UI/KUIPage.cs`: layered page type (currently TODO).
 
-# UI Framework
-## Main Files/Classes
-* KUIBasePage Class: The base class for all UI pages. Each UI page should inherit from this base class and register the custom page type in PageEnum.cs.
-* KUIManager Class: The KUIManager.cs file defines external interfaces for various UI operations. The PageEnum.cs file defines an enumeration for all UI pages. Each element of this enum should contain the prefab path (relative to the Resources directory) and the UI name.
-## Usage
-* When creating a new UI page, first create your page class and inherit from KUIBasePage.
-Register the new page type in PageEnum.cs following the example format.
-* To create a page, call KUIManager.CreateUI<xxxPage>(xxx parameters). To destroy a page, call KUIManager.DestroyUI<xxxPage>().
-* KUIBasePage's onStart, onDestroy, and InitParams functions are virtual methods and should be overridden as needed. InitParams is used to receive data passed to the UI, while onStart and onDestroy are called when the UI is created or destroyed.
-## Notes
-* KUIBasePage inherits from KObserverNoMono class. In fact, unless otherwise specified, all classes should inherit from KObserver or KObserverNoMono.
-Currently, there are not many features. There is no standardized logic for more complex UI interactions (mainly for complex lists that need to be generalized; if future pages require complex data handling, a new member in KUIBasePage should be created to manage the data). Future updates will continue to improve this based on new requirements (like hierarchy divisions, sorting, generic dialogs, etc.).
-## Example
-* The following is an example of a custom page based on KUIBase. In addition to its built-in buttons, this page also includes buttons dynamically created using KUICell. You should have UGUI prefabs with the same names and start your game in Entrance scene
+### Usage
+- Create a class inheriting from `KUIBase`.
+- Create a prefab under `Resources/UI_prefabs/`.
+- Register with `[KUI_Info("prefab_path", "PageName")]` (path is relative to `Resources/UI_prefabs`).
+- Call `KUIManager.instance.CreateUI<TPage>(params object[] args)` to show it.
+- Use `DestroySelf()` or `KUIManager.instance.DestroyUI(page)` to remove it.
+
+### Example
 ```csharp
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using KToolkit;
 
-
-// Register the UI using the KUI_Info attribute. The first parameter is the prefab’s relative path under Resources/UI_prefabs, and the second parameter is the UI name (which can be arbitrary, and may be the same as the class name).
 [KUI_Info("start_page", "StartMenuPage")]
 public class StartMenuPage : KUIBase
 {
     Button newGameButton;
-    Button quitButton;
-    Button tutorialButton;
 
-    // Initialization function
     public override void InitParams(params object[] args)
     {
         base.InitParams(args);
-        
-        // Register the event, to close this page when game start
-        AddEventListener(KEventName.GameStartComplete, args =>
-        {
-            DestroySelf();
-        });
-        
-        // Find UGUI components through transform, and bind the event funcions
         newGameButton = transform.Find("root/new_game_button").GetComponent<Button>();
-        quitButton = transform.Find("root/quit_button").GetComponent<Button>();
-        tutorialButton = transform.Find("root/tutorial_button").GetComponent<Button>();
-
-        newGameButton.onClick.AddListener(EnterNewGameRoleSelectState);
-        quitButton.onClick.AddListener(QuitGame);
-        tutorialButton.onClick.AddListener(Tutorial);
-        
-        // create 5 button cells under "root" in the prefab
-        for (int i = 0; i < 5; ++i)
-        {
-            cellList.Add(CreateUICell<MenuButtonCell>(transform.Find("root")));
-        }
+        newGameButton.onClick.AddListener(OnNewGame);
     }
 
-    void EnterNewGameRoleSelectState()
+    void OnNewGame()
     {
-        KUIManager.instance.CreateUI<RoleSelectPage>();
-    }
-
-    void Tutorial()
-    {
-        KUIManager.instance.CreateUI<TutorialPage>();
-    }
-
-    void QuitGame()
-    {
-        Application.Quit();
+        DestroySelf();
     }
 }
-
-// Just a example, no other functions
-[KUI_Cell_Info("UI_prefabs/Cell/menu_button", "MenuButtonCell")]
-public class MenuButtonCell : KUICell
-{
-    public override void OnCreate(params object[] args)
-    {
-        // do your logic
-    }
-}
-
 ```
 
-# State Machine
-## Main Files/Classes
-* StateMachineLib.cs: Contains the abstract BaseState class (state class) and BaseFSM class (FSM, Finite State Machine).
-Usage
-* This state machine is tightly coupled with MonoBehavior, meaning the state machine must hold a MonoBehavior as its attached object and can only exist as an attachment to a MonoBehavior.
-* To use the state machine, create a new class that inherits from BaseState for a specific MonoBehavior class (e.g., Player), and create a PlayerFSM class inheriting from BaseFSM (naming is flexible, but should be clear and understandable).
-* Define the necessary state classes (inheriting from PlayerBaseState). For example, if the Player has standing, running, and jumping states, three state classes can be created, and each state should override methods such as HandleUpdate, HandleFixedUpdate, HandleTrigger, etc., defining the behavior for each state at different times.
-* The EnterState and ExitState functions are called when entering or exiting a state. Use BaseFSM.TransitState to switch between different states.
-In the MonoBehavior script, create an instance of PlayerFSM and hold it (the state machine and MonoBehavior mutually hold each other). In the corresponding lifecycle methods, call the state's Handle method (e.g., in the Update method, call stateMachine.currentState.HandleUpdate without adding any other logic).
-## TODO: Example
-* Under construction......
-## Notes
-* The business logic for MonoBehavior lifecycle methods (such as Update, FixedUpdate, OnTriggerEnter, etc., which are called repeatedly) should be written inside the state machine. While this may result in repetitive logic, using a state machine in a complex system with many states will make the overall logic clearer, more readable, and maintainable.
-* To avoid redundant logic, you can encapsulate common logic across all states. For example, if all states need to listen to input (if(input(xxx))), consider adding a HandleInput method in the corresponding MonoBehavior, putting all input logic there, and calling HandleInput in all states to reduce code duplication.
+## State Machine
+### Main File
+- `Framework/StateMachine/KStateMachineLib.cs`: `KIBaseState<T>` and `KStateMachine<T>`.
+
+### Usage
+- Implement `KIBaseState<T>` for your actor (e.g., `PlayerStateIdle`).
+- Create `KStateMachine<T>` with an owner `MonoBehaviour` and initial state.
+- Call `TransitState<TState>()` to switch states.
+
+### Example
+```csharp
+public class PlayerIdle : KIBaseState<Player>
+{
+    public void EnterState(Player owner, params object[] args) {}
+    public void HandleFixedUpdate(Player owner) {}
+    public void HandleUpdate(Player owner) {}
+    public void ExitState(Player owner) {}
+    public void HandleCollide2D(Player owner, Collision2D collision) {}
+    public void HandleTrigger2D(Player owner, Collider2D collider) {}
+}
+```
+
+## Timer System
+- `Framework/KTimerManager.cs`: schedule delayed or looping callbacks.
+- Call `KTimerManager.instance.Update()` every frame (already invoked by `KFrameworkManager.Update`).
+
+## Tick System
+- `Framework/TickSystem/KTickManager.cs`: fixed-rate tick loop (`IKTickable`).
+- Place one `KTickManager` in the scene or let the singleton create it.
+
+## Object Pool
+- `Framework/ObjectsPool.cs`: simple prefab pool.
+- Requires a `pool_transform_parent` object in the scene for pooled instances.
+
+## Audio
+- `Framework/Audio/AudioManager.cs`: BGM/effect playback via Resources paths.
