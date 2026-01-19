@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEngine;
 
 namespace KToolkit
 {
@@ -8,7 +9,7 @@ namespace KToolkit
     {
         private const string KEntranceScenePath = "Assets/Scenes/KEntrance.unity";
 
-        [MenuItem("KToolkit/Quick Switch/Open KEntrance Scene")]
+        [MenuItem("KToolkit/Open KEntrance Scene")]
         public static void OpenKEntranceScene()
         {
             var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(KEntranceScenePath);
