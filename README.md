@@ -2,6 +2,8 @@
 A lightweight Unity gameplay framework originally created for the indie game **Exp10sion**.  
 <https://store.steampowered.com/app/2618850/Exp10sion/>
 
+[简体中文](<https://github.com/cortexA233/KToolkit_for_unity/blob/main/README_CN.md>)
+
 ## Quick Start
 1. **Import the framework**
    * Use the Release package (recommended)
