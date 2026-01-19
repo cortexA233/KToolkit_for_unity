@@ -4,12 +4,12 @@
 
 ## 快速开始
 1. **导入框架**
-   1.1 直接使用Release版本（推荐）
+   * 直接使用Release版本（推荐）
       - 在 GitHub Releases 中下载 ''最新的unitypackage文件'' 并导入引擎。
       - 该包内已包含预配置场景与示例脚本，导入后可直接打开示例场景 `KEntrance.unity` 体验。
       - 框架的启动代码已经包含在 `KEntrance.unity` 场景中，需要确保启动/进入游戏时必须以这个场景作为入口，或自行重构框架的启动和初始化方式。
     
-   1.2 从源码开始手动配置框架
+   * 从源码开始手动配置框架
       - 直接将 `Framework/` 与 `Framework_Editor/` 复制到 Unity工程 `Assets/` 下的任意目录。
       - **需要准备默认管理器使用的场景，包含以下GameObject和对应的组件**：
          - `KCanvas`（UI 根节点，需要包含UGUI的Canvas组件）
