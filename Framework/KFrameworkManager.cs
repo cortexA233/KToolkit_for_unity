@@ -17,7 +17,11 @@ namespace KToolkit
 
         public virtual void InitKFramework()
         {
-            
+            // KTickManager.instance
+            DontDestroyOnLoad(GameObject.Find("KCanvas"));
+            DontDestroyOnLoad(GameObject.Find("Main Camera"));
+            DontDestroyOnLoad(GameObject.Find("EventSystem"));;
+            DontDestroyOnLoad(GameObject.Find("pool_transform_parent"));
             KUIManager.instance.Init();
         }
 
@@ -25,6 +29,7 @@ namespace KToolkit
         {
             KUIManager.instance.Update();
             KTimerManager.instance.Update();
+            KTickManager.instance.Update();
         }
     }
 

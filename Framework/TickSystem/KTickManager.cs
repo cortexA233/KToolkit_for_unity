@@ -51,7 +51,7 @@ namespace KToolkit
             RecalculateInterval();
         }
 
-        private void Update()
+        public void Update()
         {
             if (!autoRun) return;
 
