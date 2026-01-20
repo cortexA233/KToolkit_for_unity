@@ -19,7 +19,6 @@ namespace KToolkit
         {
             // KTickManager.instance
             DontDestroyOnLoad(GameObject.Find("KCanvas"));
-            DontDestroyOnLoad(GameObject.Find("Main Camera"));
             DontDestroyOnLoad(GameObject.Find("EventSystem"));;
             DontDestroyOnLoad(GameObject.Find("pool_transform_parent"));
             KUIManager.instance.Init();

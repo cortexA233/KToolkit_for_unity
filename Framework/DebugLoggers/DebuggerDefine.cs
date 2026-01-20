@@ -17,5 +17,15 @@ namespace KToolkit
             string res = "<color=yellow>Example Log:</color> " + DebuggerConcatArgs(args);
             Debug.Log(res);
         }
+        public static void Cortex_DebugLog(params object[] args)
+        {
+            if (!debuggerConfig.ContainsKey("Cortex") || !debuggerConfig["Cortex"])
+            {
+                return;
+            }
+
+            string res = "<color=yellow>Cortex Log:</color> " + DebuggerConcatArgs(args);
+            Debug.Log(res);
+        }
     }
 }
