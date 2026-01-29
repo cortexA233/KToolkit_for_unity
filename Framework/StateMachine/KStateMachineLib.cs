@@ -16,6 +16,8 @@ namespace KToolkit
         public void ExitState(TOwner owner);
         public void HandleCollide2D(TOwner owner, Collision2D collision);
         public void HandleTrigger2D(TOwner owner, Collider2D collider);
+        public void HandleCollide(TOwner owner, Collision collision);
+        public void HandleTrigger(TOwner owner, Collider collider);
     }
     
     public class KStateMachine<TOwner> : KObserverNoMono where TOwner : MonoBehaviour
