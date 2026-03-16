@@ -23,7 +23,6 @@ public class AudioManager : KSingletonNoMono<AudioManager>
         Object.DontDestroyOnLoad(audioManager);
         musicSource = audioManager.AddComponent<AudioSource>();
         musicSource.loop = true;
-        // Debug.Log(gameObject);
         for (int i = 0; i < effectSourcePoolSize; ++i)
         {
             effectSourcePool.Add(audioManager.AddComponent<AudioSource>());
