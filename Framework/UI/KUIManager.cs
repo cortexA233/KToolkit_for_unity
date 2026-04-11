@@ -2,6 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem.UI;
+#endif
 using Object = UnityEngine.Object;
 
 
@@ -11,12 +16,13 @@ namespace KToolkit
     {
         private List<KUIBase> uiList = new List<KUIBase>();
 
+        private const string CanvasObjectName = "KCanvas";
+        private const string EventSystemObjectName = "EventSystem";
         public List<KUIBase> DebugGetUIList()
         {
             return uiList;
         }
 
-        // private List<UIPage> pageStack = new List<UIPage>();
         private static int singletonNum = 0;
         public KUIManager()
         {
@@ -26,10 +32,54 @@ namespace KToolkit
             {
                 Debug.LogError("错误！KUIManager创建了第二个多余的实例，请检查代码！" + singletonNum);
             }
-            // InitPageDict();
+            KeepCanvas();
+            KeepEventSystem();
             AutoInitPageDict();
             AutoInitCellDict();
         }
+
+        #region Initialize
+        void KeepCanvas()
+        {
+            var kCanvas = GameObject.Find(CanvasObjectName);
+            if (kCanvas == null)
+            {
+                kCanvas = Object.Instantiate(new GameObject());
+                kCanvas.name = CanvasObjectName;
+                kCanvas.AddComponent<Canvas>();
+                kCanvas.AddComponent<CanvasScaler>();
+                kCanvas.AddComponent<GraphicRaycaster>();
+                kCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                kCanvas.GetComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                kCanvas.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1920, 1080);
+            }
+            Object.DontDestroyOnLoad(kCanvas);
+        }
+        
+        void KeepEventSystem()
+        {
+            var eventSystemObject = GameObject.Find(EventSystemObjectName);
+            if (eventSystemObject == null)
+            {
+                eventSystemObject = new GameObject(EventSystemObjectName);
+            }
+
+            if (eventSystemObject.GetComponent<EventSystem>() == null)
+            {
+                eventSystemObject.AddComponent<EventSystem>();
+            }
+
+            if (eventSystemObject.GetComponent<BaseInputModule>() == null)
+            {
+#if ENABLE_INPUT_SYSTEM
+                eventSystemObject.AddComponent<InputSystemUIInputModule>();
+#else
+                eventSystemObject.AddComponent<StandaloneInputModule>();
+#endif
+            }
+            Object.DontDestroyOnLoad(eventSystemObject);
+        }
+        #endregion
         
         public T CreateUI<T>(params object[] args) where T : KUIBase, new()
         {

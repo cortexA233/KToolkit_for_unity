@@ -4,12 +4,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem.UI;
+#endif
 
 
 namespace KToolkit
 {
     public class KFrameworkManager : KSingleton<KFrameworkManager>
     {
+        private const string PoolTransformParentObjectName = "pool_transform_parent";
+
         private GameObject frameworkManagerObject;
     
         protected override void Awake()
@@ -19,49 +24,21 @@ namespace KToolkit
 
         public virtual void InitKFramework()
         {
-            // KTickManager.instance
-            var canvasObject = GetOrCreateKCanvas();
-            var eventSystemObject = GetOrCreateEventSystem();
-
-            DontDestroyOnLoad(canvasObject);
-            DontDestroyOnLoad(eventSystemObject);
-            // DontDestroyOnLoad(GameObject.Find("pool_transform_parent"));
             KUIManager.instance.Init();
+            CreateAndKeepPoolTransform();
         }
 
-        private static GameObject GetOrCreateKCanvas()
+        void CreateAndKeepPoolTransform()
         {
-            var canvasObject = GameObject.Find("KCanvas");
-            if (canvasObject != null)
+            var poolTransformParent = GameObject.Find(PoolTransformParentObjectName);
+            if (poolTransformParent == null)
             {
-                return canvasObject;
+                poolTransformParent = new GameObject(PoolTransformParentObjectName);
             }
 
-            canvasObject = new GameObject("KCanvas");
-            canvasObject.AddComponent<Canvas>();
-            var canvasScaler = canvasObject.AddComponent<CanvasScaler>();
-            canvasObject.AddComponent<GraphicRaycaster>();
-
-            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasScaler.referenceResolution = new Vector2(1920f, 1080f);
-
-            return canvasObject;
+            DontDestroyOnLoad(poolTransformParent);
         }
-
-        private static GameObject GetOrCreateEventSystem()
-        {
-            var eventSystemObject = GameObject.Find("EventSystem");
-            if (eventSystemObject != null)
-            {
-                return eventSystemObject;
-            }
-
-            eventSystemObject = new GameObject("EventSystem");
-            eventSystemObject.AddComponent<EventSystem>();
-            eventSystemObject.AddComponent<StandaloneInputModule>();
-            return eventSystemObject;
-        }
-
+        
         private void Update()
         {
             KUIManager.instance.Update();
