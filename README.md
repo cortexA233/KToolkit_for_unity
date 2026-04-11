@@ -8,18 +8,11 @@ A lightweight Unity gameplay framework originally created for the indie game **E
 1. **Import the framework**
    * Use the Release package (recommended)
       - Download the latest `.unitypackage` from GitHub Releases and import it.
-      - The package already includes a preconfigured scene and sample scripts. After importing, you can open
-        `KEntrance.unity` to try it out.
-      - The framework bootstrap code is already included in `KEntrance.unity`. Make sure your game starts from
-        this scene, or refactor the startup/initialization on your own.
+      - Call `KFrameworkManager.instance.InitKFramework()` in your own script to boot and
+        initialize the framework.
    * Configure manually from source
       - Copy `Framework/` and `Framework_Editor/` into any folder under your Unity project's `Assets/`.
-      - **Prepare the default manager scene objects with the following GameObjects and components**:
-         - `KCanvas` (UI root; must have a UGUI Canvas component)
-         - `Main Camera` (default main camera)
-         - `EventSystem` (must include the UGUI EventSystem component)
-         - `pool_transform_parent` (empty object used as the pool mount point)
-      - After the setup, call `KFrameworkManager.instance.InitKFramework()` in your own script to boot and
+      - Call `KFrameworkManager.instance.InitKFramework()` in your own script to boot and
         initialize the framework.
 
 ## Project Structure
