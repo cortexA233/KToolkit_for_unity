@@ -11,7 +11,7 @@ A lightweight Unity gameplay framework originally created for the indie game **E
       - Call `KFrameworkManager.instance.InitKFramework()` in your own script to boot and
         initialize the framework.
    * Configure manually from source
-      - Copy `Framework/` and `Framework_Editor/` into any folder under your Unity project's `Assets/`.
+      - Copy `Framework/` and `Editor/` into any folder under your Unity project.
       - Call `KFrameworkManager.instance.InitKFramework()` in your own script to boot and
         initialize the framework.
 
