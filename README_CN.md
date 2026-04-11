@@ -9,7 +9,7 @@
       - 在自己的脚本中调用 `KFrameworkManager.instance.InitKFramework()`。即可启动并初始化本框架的功能。
     
    * 从源码开始手动配置框架
-      - 直接将 `Framework/` 与 `Framework_Editor/` 复制到 Unity工程 `Assets/` 下的任意目录。
+      - 直接将 `Framework/` 与 `Editor/` 复制到 Unity工程 `Assets/` 下的任意目录。
       - 在自己的脚本中调用 `KFrameworkManager.instance.InitKFramework()`。即可启动并初始化本框架的功能。
 
 ## 项目结构
