@@ -26,7 +26,6 @@ namespace KToolkit
         private static int singletonNum = 0;
         public KUIManager()
         {
-            Object.DontDestroyOnLoad(GameObject.Find("KCanvas"));
             ++singletonNum;
             if (singletonNum > 1)
             {
