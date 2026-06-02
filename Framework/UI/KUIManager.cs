@@ -23,14 +23,8 @@ namespace KToolkit
             return uiList;
         }
 
-        private static int singletonNum = 0;
         public KUIManager()
         {
-            ++singletonNum;
-            if (singletonNum > 1)
-            {
-                Debug.LogError("错误！KUIManager创建了第二个多余的实例，请检查代码！" + singletonNum);
-            }
             KeepCanvas();
             KeepEventSystem();
             AutoInitPageDict();
