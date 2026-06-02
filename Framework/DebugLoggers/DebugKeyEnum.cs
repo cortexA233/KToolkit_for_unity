@@ -11,6 +11,13 @@ namespace KToolkit
 
         static KDebugLogger()
         {
+            ResetRuntimeState();
+        }
+
+        // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetRuntimeState()
+        {
+            debuggerConfig.Clear();
             InitDebuggerConfig();
         }
         

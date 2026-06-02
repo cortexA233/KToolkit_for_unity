@@ -5,7 +5,7 @@ using System.Threading;
 using KToolkit;
 
 
-public class AudioManager : KSingletonNoMono<AudioManager>
+public class KAudioManager : KSingletonNoMono<KAudioManager>
 {
     private GameObject audioManager;
     private const int effectSourcePoolSize = 8;
@@ -13,7 +13,7 @@ public class AudioManager : KSingletonNoMono<AudioManager>
     private List<AudioSource> effectSourcePool = new List<AudioSource>();
     private AudioSource musicSource;
 
-    public AudioManager()
+    public KAudioManager()
     {
         audioManager = GameObject.Find("AudioManager");
         if (audioManager == null)

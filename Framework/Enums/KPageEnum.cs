@@ -11,10 +11,16 @@ namespace KToolkit
     // UIManager的自动注册函数写在这里
     public partial class KUIManager
     {
-
         public static Dictionary<Type, KUI_Info> UI_INFO_MAP { get; private set; } = new Dictionary<Type, KUI_Info>();
         public static Dictionary<Type, KUI_Cell_Info> KUI_CELL_INFO_MAP { get; private set; } =
             new Dictionary<Type, KUI_Cell_Info>();
+        
+        // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetRuntimeState()
+        {
+            UI_INFO_MAP.Clear();
+            KUI_CELL_INFO_MAP.Clear();
+        }
         
         // 新建页面可以通过KUI_Info宏进行自动注册
         private void AutoInitPageDict()

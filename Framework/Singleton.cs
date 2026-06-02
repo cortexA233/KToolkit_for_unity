@@ -41,6 +41,11 @@ namespace KToolkit
         {
             _instance = (T)this;
         }
+
+        internal static void ResetInstance()
+        {
+            _instance = null;
+        }
     }
 
 
@@ -62,6 +67,11 @@ namespace KToolkit
         public virtual void Init()
         {
             
+        }
+
+        internal static void ResetInstance()
+        {
+            _instance = null;
         }
     }
 

@@ -10,6 +10,13 @@ namespace KToolkit
         private static Dictionary<KEventName, List<KObserver>> observers = new Dictionary<KEventName, List<KObserver>>();
         private static Dictionary<KEventName, List<KObserverNoMono>> observersNoMono = new Dictionary<KEventName, List<KObserverNoMono>>();
 
+        // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetRuntimeState()
+        {
+            observers.Clear();
+            observersNoMono.Clear();
+        }
+
         public static int DebugGetKObserverCount()
         {
             return observers.Count + observersNoMono.Count;
