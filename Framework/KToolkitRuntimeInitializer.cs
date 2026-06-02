@@ -8,6 +8,17 @@ namespace KToolkit
 {
     internal static class KToolkitRuntimeInitializer
     {
+        private static readonly HashSet<string> AssemblyNameWhitelist =
+            new HashSet<string>(StringComparer.Ordinal)
+            {
+                "KToolkit",
+                "KToolkit.Editor",
+                "Assembly-CSharp",
+                "Assembly-CSharp-firstpass",
+                "Assembly-CSharp-Editor",
+                "Assembly-CSharp-Editor-firstpass",
+            };
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntimeState()
         {
@@ -57,7 +68,19 @@ namespace KToolkit
 
         private static IEnumerable<Type> GetAllTypes()
         {
-            return AppDomain.CurrentDomain.GetAssemblies().SelectMany(GetTypesSafely);
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Where(ShouldScanAssembly)
+                .SelectMany(GetTypesSafely);
+        }
+
+        private static bool ShouldScanAssembly(Assembly assembly)
+        {
+            return assembly != null && ShouldScanAssemblyName(assembly.GetName().Name);
+        }
+
+        private static bool ShouldScanAssemblyName(string assemblyName)
+        {
+            return assemblyName != null && AssemblyNameWhitelist.Contains(assemblyName);
         }
 
         private static IEnumerable<Type> GetTypesSafely(Assembly assembly)

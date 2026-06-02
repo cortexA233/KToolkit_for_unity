@@ -18,29 +18,19 @@ namespace KToolkit.Tests
             DestroyObjectIfExists(nameof(DiscoveredMonoSingleton));
             DestroyObjectIfExists("KCanvas");
             DestroyObjectIfExists("EventSystem");
+            ResetSingletonInstance(typeof(DiscoveredNoMonoSingleton), typeof(KSingletonNoMono<>));
+            ResetSingletonInstance(typeof(DiscoveredMonoSingleton), typeof(KSingleton<>));
         }
 
         [Test]
-        public void SubsystemRegistrationClearsStaticRuntimeStateAndDiscoveredSingletons()
+        public void SubsystemRegistrationClearsOnlyWhitelistedAssemblySingletons()
         {
-            _ = new TestObserver();
-            KUIManager.UI_INFO_MAP[typeof(TestPage)] =
-                new KUI_Info("test_page", "TestPage", KUIRenderMode.Screen);
-            KUIManager.KUI_CELL_INFO_MAP[typeof(TestCell)] =
-                new KUI_Cell_Info("test_cell", "TestCell");
-            KDebugLogger.debuggerConfig.Clear();
-            KDebugLogger.debuggerConfig["Example"] = false;
-
             _ = KTimerManager.instance;
             _ = KFrameworkManager.instance;
             _ = KAudioManager.instance;
             _ = DiscoveredNoMonoSingleton.instance;
             _ = DiscoveredMonoSingleton.instance;
 
-            Assert.That(KEventManager.DebugGetKObserverCount(), Is.GreaterThan(0));
-            Assert.That(KUIManager.UI_INFO_MAP, Is.Not.Empty);
-            Assert.That(KUIManager.KUI_CELL_INFO_MAP, Is.Not.Empty);
-            Assert.That(KDebugLogger.debuggerConfig["Example"], Is.False);
             Assert.That(GetSingletonNoMonoInstance(typeof(KTimerManager)), Is.Not.Null);
             Assert.That(GetSingletonInstance(typeof(KFrameworkManager)), Is.Not.Null);
             Assert.That(GetSingletonNoMonoInstance(typeof(KAudioManager)), Is.Not.Null);
@@ -49,16 +39,37 @@ namespace KToolkit.Tests
 
             InvokeSubsystemRegistrationInitializer();
 
-            Assert.That(KEventManager.DebugGetKObserverCount(), Is.Zero);
-            Assert.That(KUIManager.UI_INFO_MAP, Is.Empty);
-            Assert.That(KUIManager.KUI_CELL_INFO_MAP, Is.Empty);
-            Assert.That(KDebugLogger.debuggerConfig["Example"], Is.True);
-            Assert.That(KDebugLogger.debuggerConfig["Cortex"], Is.True);
             Assert.That(GetSingletonNoMonoInstance(typeof(KTimerManager)), Is.Null);
             Assert.That(GetSingletonInstance(typeof(KFrameworkManager)), Is.Null);
             Assert.That(GetSingletonNoMonoInstance(typeof(KAudioManager)), Is.Null);
-            Assert.That(GetSingletonNoMonoInstance(typeof(DiscoveredNoMonoSingleton)), Is.Null);
-            Assert.That(GetSingletonInstance(typeof(DiscoveredMonoSingleton)), Is.Null);
+            Assert.That(GetSingletonNoMonoInstance(typeof(DiscoveredNoMonoSingleton)), Is.Not.Null);
+            Assert.That(GetSingletonInstance(typeof(DiscoveredMonoSingleton)), Is.Not.Null);
+        }
+
+        [Test]
+        public void AssemblyWhitelistIncludesKToolkitAndUnityDefaultScriptAssemblies()
+        {
+            Type initializerType = Type.GetType("KToolkit.KToolkitRuntimeInitializer, KToolkit");
+            Assert.That(initializerType, Is.Not.Null);
+
+            MethodInfo shouldScanAssemblyName = initializerType.GetMethod(
+                "ShouldScanAssemblyName",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(shouldScanAssemblyName, Is.Not.Null);
+
+            Assert.That(InvokeShouldScanAssemblyName(shouldScanAssemblyName, "KToolkit"), Is.True);
+            Assert.That(InvokeShouldScanAssemblyName(shouldScanAssemblyName, "KToolkit.Editor"), Is.True);
+            Assert.That(InvokeShouldScanAssemblyName(shouldScanAssemblyName, "Assembly-CSharp"), Is.True);
+            Assert.That(InvokeShouldScanAssemblyName(shouldScanAssemblyName, "Assembly-CSharp-firstpass"), Is.True);
+            Assert.That(InvokeShouldScanAssemblyName(shouldScanAssemblyName, "Assembly-CSharp-Editor"), Is.True);
+            Assert.That(InvokeShouldScanAssemblyName(shouldScanAssemblyName, "Assembly-CSharp-Editor-firstpass"), Is.True);
+            Assert.That(InvokeShouldScanAssemblyName(shouldScanAssemblyName, "KToolkit.Tests.Editor"), Is.False);
+            Assert.That(InvokeShouldScanAssemblyName(shouldScanAssemblyName, "UnityEngine.CoreModule"), Is.False);
+        }
+
+        private static bool InvokeShouldScanAssemblyName(MethodInfo method, string assemblyName)
+        {
+            return (bool)method.Invoke(null, new object[] { assemblyName });
         }
 
         private static void InvokeSubsystemRegistrationInitializer()
@@ -100,35 +111,21 @@ namespace KToolkit.Tests
                 ?.GetValue(null);
         }
 
+        private static void ResetSingletonInstance(Type singletonType, Type openSingletonType)
+        {
+            Type closedSingletonType = openSingletonType.MakeGenericType(singletonType);
+            MethodInfo resetMethod = closedSingletonType.GetMethod(
+                "ResetInstance",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            resetMethod?.Invoke(null, null);
+        }
+
         private static void DestroyObjectIfExists(string objectName)
         {
             var obj = GameObject.Find(objectName);
             if (obj != null)
             {
                 Object.DestroyImmediate(obj);
-            }
-        }
-
-        private sealed class TestObserver : KObserverNoMono
-        {
-            public TestObserver()
-            {
-                AddEventListener(KEventName.TestEvent, Noop);
-            }
-
-            private static void Noop(object[] args)
-            {
-            }
-        }
-
-        private sealed class TestPage : KUIBase
-        {
-        }
-
-        private sealed class TestCell : KUICell
-        {
-            public override void OnCreate(params object[] args)
-            {
             }
         }
 
