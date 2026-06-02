@@ -19,6 +19,7 @@ namespace KToolkit
         // 新建页面可以通过KUI_Info宏进行自动注册
         private void AutoInitPageDict()
         {
+            UI_INFO_MAP.Clear();
             var UIPagesType = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
                 .Where(type => type.IsSubclassOf(typeof(KUIBase)))
@@ -29,9 +30,9 @@ namespace KToolkit
                 if (!UI_INFO_MAP.ContainsKey(uiType))
                 {
                     // KUI_CELL_INFO_MAP.Add(uiType, uiType.GetCustomAttribute<KUI_Cell_Info>());
+                    var uiInfo = uiType.GetCustomAttribute<KUI_Info>();
                     UI_INFO_MAP.Add(uiType,
-                        new KUI_Info(uiType.GetCustomAttribute<KUI_Info>().prefabPath,
-                            uiType.GetCustomAttribute<KUI_Info>().name));
+                        new KUI_Info(uiInfo.prefabPath, uiInfo.name, uiInfo.renderMode));
                 } 
             }
         }
@@ -39,6 +40,7 @@ namespace KToolkit
         // 新建页面可以通过扫描所有KUI_Info进行自动注册
         private void AutoInitCellDict()
         {
+            KUI_CELL_INFO_MAP.Clear();
             var UICellsType = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
                 .Where(type => type.IsSubclassOf(typeof(KUICell)))

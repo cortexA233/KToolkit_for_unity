@@ -17,6 +17,7 @@ namespace KToolkit
         private static void InitDebuggerConfig()
         {
             debuggerConfig["Example"] = true;
+            debuggerConfig["Cortex"] = true;
         }
 
         private static string DebuggerConcatArgs(params object[] args)

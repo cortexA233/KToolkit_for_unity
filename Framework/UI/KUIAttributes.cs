@@ -5,6 +5,11 @@ using UnityEngine;
 
 namespace KToolkit
 {
+    public enum KUIRenderMode
+    {
+        Screen,
+        World
+    }
 
     /// <summary>
     /// 对于任意KUIBase，使用这个特性，即可自动进行KUIManager的UI类型注册
@@ -13,13 +18,15 @@ namespace KToolkit
     {
         public string prefabPath;
         public string name;
+        public KUIRenderMode renderMode;
 
         /// <summary>
         /// 初始化
         /// </summary>
         /// <param name="path">预制体相对于Resources/UIPrefabs的目录</param>
         /// <param name="uiName">UI的名字，一般是类名</param>
-        public KUI_Info(string path, string uiName)
+        /// <param name="uiRenderMode">UI的渲染方式，分为世界空间和屏幕空间两种</param>
+        public KUI_Info(string path, string uiName, KUIRenderMode uiRenderMode)
         {
             if (!path.StartsWith("UI_prefabs/"))
             {
@@ -31,6 +38,7 @@ namespace KToolkit
             }
 
             name = uiName;
+            renderMode = uiRenderMode;
         }
     }
 
