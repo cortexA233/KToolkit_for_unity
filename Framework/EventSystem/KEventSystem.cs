@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -60,7 +59,7 @@ namespace KToolkit
 
             for (int i = observers[eventName].Count - 1; i >= 0; --i)
             {
-                if (observers[eventName][i] is null || observers[eventName][i].IsDestroyed())
+                if (observers[eventName][i] == null)
                 {
                     observers[eventName].Remove(observers[eventName][i]);
                     continue;
