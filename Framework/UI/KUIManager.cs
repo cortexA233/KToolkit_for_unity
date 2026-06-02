@@ -55,10 +55,15 @@ namespace KToolkit
         
         void KeepEventSystem()
         {
-            var eventSystemObject = Object.FindAnyObjectByType<EventSystem>().gameObject;
-            if (eventSystemObject == null)
+            var eventSystemComponent = Object.FindAnyObjectByType<EventSystem>();
+            GameObject eventSystemObject;
+            if (eventSystemComponent == null)
             {
                 eventSystemObject = new GameObject(EventSystemObjectName);
+            }
+            else
+            {
+                eventSystemObject = eventSystemComponent.gameObject;
             }
 
             if (eventSystemObject.GetComponent<EventSystem>() == null)
