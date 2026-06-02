@@ -14,7 +14,7 @@ namespace KToolkit
             ResetRuntimeState();
         }
 
-        // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         internal static void ResetRuntimeState()
         {
             debuggerConfig.Clear();

@@ -15,7 +15,7 @@ namespace KToolkit
         public static Dictionary<Type, KUI_Cell_Info> KUI_CELL_INFO_MAP { get; private set; } =
             new Dictionary<Type, KUI_Cell_Info>();
         
-        // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         internal static void ResetRuntimeState()
         {
             UI_INFO_MAP.Clear();
