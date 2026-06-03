@@ -28,5 +28,16 @@ namespace KToolkit
             string res = "<color=yellow>Cortex Log:</color> " + DebuggerConcatArgs(args);
             Debug.Log(res);
         }
+        
+        public static void PlayerBallControl_DebugLog(params object[] args)
+        {
+            if (!debuggerConfig.ContainsKey("PlayerBallControl") || !debuggerConfig["PlayerBallControl"])
+            {
+                return;
+            }
+
+            string res = "<color=blue>PlayerBallControl Log:</color> " + DebuggerConcatArgs(args);
+            Debug.Log(res);
+        }
     }
 }
