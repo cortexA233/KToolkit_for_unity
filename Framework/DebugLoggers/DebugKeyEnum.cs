@@ -26,6 +26,7 @@ namespace KToolkit
             debuggerConfig["Example"] = true;
             debuggerConfig["Cortex"] = true;
             debuggerConfig["PlayerBallControl"] = true;
+            debuggerConfig["Water"] = true;
         }
 
         private static string DebuggerConcatArgs(params object[] args)

@@ -39,5 +39,16 @@ namespace KToolkit
             string res = "<color=blue>PlayerBallControl Log:</color> " + DebuggerConcatArgs(args);
             Debug.Log(res);
         }
+        
+        public static void Water_DebugLog(params object[] args)
+        {
+            if (!debuggerConfig.ContainsKey("Water") || !debuggerConfig["Water"])
+            {
+                return;
+            }
+
+            string res = "<color=cyan>Water Log:</color> " + DebuggerConcatArgs(args);
+            Debug.Log(res);
+        }
     }
 }
