@@ -11,6 +11,7 @@ public class KAudioManager : KSingletonNoMono<KAudioManager>
     private const int effectSourcePoolSize = 8;
     //AudioSource[] effectSourcePool = new AudioSource[effectSourcePoolSize];
     private List<AudioSource> effectSourcePool = new List<AudioSource>();
+    private Dictionary<AudioClip, AudioSource> loopEffectSources = new Dictionary<AudioClip, AudioSource>();
     private AudioSource musicSource;
 
     public KAudioManager()
@@ -42,6 +43,22 @@ public class KAudioManager : KSingletonNoMono<KAudioManager>
         musicSource.Play();
     }
 
+    public void PlayBGM(AudioClip clip, bool isLoop = true, float volume = 0.25f)
+    {
+        if (clip == null)
+        {
+            return;
+        }
+
+        if (musicSource.clip == clip && musicSource.isPlaying)
+        {
+            return;
+        }
+
+        SetAudioSource(musicSource, clip, isLoop, volume);
+        musicSource.Play();
+    }
+
     public void PlayEffectAudio(string path)
     {
         foreach(var item in effectSourcePool)
@@ -53,6 +70,62 @@ public class KAudioManager : KSingletonNoMono<KAudioManager>
                 break;
             }
         }
+    }
+
+    public void PlayEffectAudio(AudioClip clip, float volume = 0.25f)
+    {
+        if (clip == null)
+        {
+            return;
+        }
+
+        foreach(var item in effectSourcePool)
+        {
+            if(item.isPlaying == false)
+            {
+                SetAudioSource(item, clip, false, volume);
+                item.Play();
+                break;
+            }
+        }
+    }
+
+    public void PlayLoopEffectAudio(AudioClip clip, float volume = 0.25f)
+    {
+        if (clip == null)
+        {
+            return;
+        }
+
+        if (loopEffectSources.TryGetValue(clip, out AudioSource source) && source != null)
+        {
+            if (!source.isPlaying)
+            {
+                source.Play();
+            }
+
+            return;
+        }
+
+        source = audioManager.AddComponent<AudioSource>();
+        SetAudioSource(source, clip, true, volume);
+        source.Play();
+        loopEffectSources[clip] = source;
+    }
+
+    public void StopLoopEffectAudio(AudioClip clip)
+    {
+        if (clip == null)
+        {
+            return;
+        }
+
+        if (!loopEffectSources.TryGetValue(clip, out AudioSource source) || source == null)
+        {
+            return;
+        }
+
+        source.Stop();
     }
 
     public void StopBGM()
@@ -98,6 +171,18 @@ public class KAudioManager : KSingletonNoMono<KAudioManager>
             return;
         }
         source.clip = Resources.Load<AudioClip>(path);
+        source.loop = isLoop;
+        source.volume = volume;
+    }
+
+    public void SetAudioSource(AudioSource source, AudioClip clip, bool isLoop = false, float volume = 0.25f)
+    {
+        if (source == null || clip == null)
+        {
+            return;
+        }
+
+        source.clip = clip;
         source.loop = isLoop;
         source.volume = volume;
     }
