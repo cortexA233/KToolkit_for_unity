@@ -12,12 +12,37 @@
 
 ## 修改原则
 
-- KToolkit 是可复用的 Unity 轻量级框架，修改时优先保持通用性，不引入 `Endfield_test` 的具体玩法、场景、资源或业务依赖。
+- KToolkit 是可复用的 Unity 轻量级框架，修改时优先保持通用性，不引入宿主项目或父仓库的具体玩法、场景、资源或业务依赖。
 - Runtime 与 Editor 代码保持清晰边界：运行时代码放在 `Framework/`，编辑器扩展放在 `Editor/`，运行时程序集不得依赖 `UnityEditor`。
 - 对外 API、特性、枚举和单例初始化流程要谨慎改动；如必须调整，需要同步考虑现有调用方和后续自定义 Unity 编辑器工具的安全复用。
 - 新增能力控制规模和实现难度，优先选择能快速落地、低耦合、便于后续迭代的方案。
 - 后续所有 ScriptableObject 配置和 MonoBehaviour 里的脚本配置字段，都要加上中文 Header。
 - 如非特殊提出需求，实现或迭代功能时，不需要单独编写 Editor 测试代码。
+
+## 框架架构概览
+
+入口：通过 `KFrameworkManager.instance.InitKFramework()` 初始化 UI 框架，并创建或复用持久化的 `pool_transform_parent` GameObject 作为对象池父节点。
+
+`KFrameworkManager.Update()` 负责驱动 UI、Timer、Tick 的运行时更新循环。
+
+`KToolkitRuntimeInitializer` 使用 `[RuntimeInitializeOnLoadMethod]` + 反射扫描程序集，在 Editor Domain Reload 后自动重置所有单例状态，确保 Play Mode 进入时的一致性。
+
+**核心子系统**：
+
+| 子系统 | 路径 | 说明 |
+|--------|------|------|
+| 单例基类 | `Framework/Singleton.cs` | `KSingleton<T>`（MonoBehaviour）支持懒加载并在自动创建实例时使用 `DontDestroyOnLoad`；`KSingletonNoMono<T>`（纯 C#）提供懒加载实例，不涉及场景对象持久化 |
+| 事件系统 | `Framework/EventSystem/` | `KEventManager` 静态派发，`KObserver`/`KObserverNoMono` 为监听者基类，事件名通过 `KEventName` 枚举类型安全地定义 |
+| 状态机 | `Framework/StateMachine/KStateMachineLib.cs` | `KStateMachine<TOwner>` 泛型实现，状态实现 `KIBaseState<TOwner>`，通过 `TransitState<TState>()` 切换，支持 2D 碰撞/触发回调 |
+| UI 框架 | `Framework/UI/` | `KUIManager`（非 Mono 单例）管理 `KUIPage`/`KUICell` 层级；通过 `[KUI_Info]` 特性注册预制体路径；Canvas 固定 1920×1080 ScreenSpace-Overlay |
+| 定时器 | `Framework/KTimerManager.cs` | Guid 追踪的延迟/循环回调，支持非缩放时间和对象池复用 |
+| Tick 系统 | `Framework/TickSystem/KTickManager.cs` | 固定频率 tick（可配置），实现 `IKTickable` 接口订阅；中途增删使用 pending 列表防止迭代破坏 |
+| 对象池 | `Framework/ObjectsPool.cs` | 抽象基类，Queue 复用，支持最大数量限制和父节点管理 |
+
+## 程序集定义
+
+- `KToolkit.asmdef`：框架运行时。
+- `Editor/KToolkit.Editor.asmdef`：编辑器扩展。
 
 ## Unity 与资源约定
 
