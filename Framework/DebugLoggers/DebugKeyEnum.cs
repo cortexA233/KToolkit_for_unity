@@ -77,15 +77,30 @@ namespace KToolkit
             string res = "";
             if (args == null)
             {
-                return "null  ";
+                return "空  ";
             }
 
             foreach (var item in args)
             {
-                res += item != null ? item.ToString() : "null";
+                res += DebuggerArgToString(item);
                 res += "  ";
             }
             return res;
+        }
+
+        private static string DebuggerArgToString(object item)
+        {
+            if (item == null)
+            {
+                return "空";
+            }
+
+            if (item is bool boolValue)
+            {
+                return boolValue ? "是" : "否";
+            }
+
+            return item.ToString();
         }
     }
 

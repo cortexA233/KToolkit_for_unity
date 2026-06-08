@@ -117,7 +117,7 @@ namespace KToolkit
             //     pageStack.Add((UIPage)(object)newUI);
             //     pageStack[^1].Activate();
             // }
-            // KDebugLogger.UI_DebugLog("UI 创建: ", UI_INFO_MAP[typeof(T)].name);
+            // KDebugLogger.UI_DebugLog("界面创建：", UI_INFO_MAP[typeof(T)].name);
             return newUI;
         }
 
@@ -148,7 +148,7 @@ namespace KToolkit
             //         pageStack[^1].Activate();
             //     }
             // }
-            // KDebugLogger.UI_DebugLog("UI 销毁: ", ui);
+            // KDebugLogger.UI_DebugLog("界面销毁：", ui);
             ui.OnDestroy();
             Object.Destroy(ui.gameObject);
             ui.DestroySelf();
@@ -165,7 +165,7 @@ namespace KToolkit
             //         pageStack[^1].Activate();
             //     }
             // }
-            // KDebugLogger.UI_DebugLog("UI 隐藏: ", ui);
+            // KDebugLogger.UI_DebugLog("界面隐藏：", ui);
         }
 
         public void HideAllUIWithType<T>() where T : KUIBase
@@ -190,7 +190,7 @@ namespace KToolkit
             //         pageStack[^1].Activate();
             //     }
             // }
-            // KDebugLogger.UI_DebugLog("UI 重新显示: ", ui);
+            // KDebugLogger.UI_DebugLog("界面重新显示：", ui);
         }
 
         public void ShowAllUIWithType<T>() where T : KUIBase
