@@ -24,7 +24,6 @@ namespace KToolkit
 
         public virtual void InitKFramework()
         {
-            KDebugLogger.Cortex_DebugLog("InitKFramework!");
             KUIManager.instance.Init();
             CreateAndKeepPoolTransform();
         }
