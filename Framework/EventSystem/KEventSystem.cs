@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -10,6 +9,13 @@ namespace KToolkit
     {
         private static Dictionary<KEventName, List<KObserver>> observers = new Dictionary<KEventName, List<KObserver>>();
         private static Dictionary<KEventName, List<KObserverNoMono>> observersNoMono = new Dictionary<KEventName, List<KObserverNoMono>>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetRuntimeState()
+        {
+            observers.Clear();
+            observersNoMono.Clear();
+        }
 
         public static int DebugGetKObserverCount()
         {
@@ -60,7 +66,7 @@ namespace KToolkit
 
             for (int i = observers[eventName].Count - 1; i >= 0; --i)
             {
-                if (observers[eventName][i] is null || observers[eventName][i].IsDestroyed())
+                if (observers[eventName][i] == null)
                 {
                     observers[eventName].Remove(observers[eventName][i]);
                     continue;

@@ -11,12 +11,21 @@ namespace KToolkit
 
         static KDebugLogger()
         {
+            ResetRuntimeState();
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetRuntimeState()
+        {
+            debuggerConfig.Clear();
             InitDebuggerConfig();
         }
         
         private static void InitDebuggerConfig()
         {
             debuggerConfig["Example"] = true;
+            debuggerConfig["Cortex"] = true;
+            debuggerConfig["PlayerBallControl"] = true;
         }
 
         private static string DebuggerConcatArgs(params object[] args)
